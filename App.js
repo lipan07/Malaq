@@ -1,40 +1,82 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TextInput, Button } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Button, Alert, Pressable } from 'react-native';
 
 export default function App() {
-  const [text, onChangeText] = React.useState('');
-  const [number, onChangeNumber] = React.useState('');
-
+  const handlePress = () => {
+    console.log('Do not click this button again!!');
+    Alert.alert('Do not click this button again!!');
+  };
   return (
-    <View style={styles.container}>
-      <View style={styles.inputContainer}>
-        <TextInput placeholder="Type here..." style={styles.textInput} />
-        <TextInput placeholder="Type here..." style={styles.textInput} />
-        <TextInput placeholder="Type here..." style={styles.textInput} />
-        <Button title="Submit" />
-      </View >
-      <View>
-        <TextInput placeholder="Search here..." />
+    <View style={styles.allContainer}>
+      <View style={styles.searchContainer}>
+        <TextInput style={styles.input} placeholder="Type here.." />
+        <Pressable style={styles.btn} title="Click here.." onPress={handlePress}>
+          <Text>Click here..</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.container}>
+        <View style={styles.container}>
+          <View style={styles.boxContainerOne}>
+            <Text>Lipan</Text>
+          </View>
+          <View style={styles.boxContainerTwo}>
+            <Text>Lipan 1</Text>
+          </View>
+          <View style={styles.boxContainerThree}>
+            <Text>Lipan 2a</Text>
+          </View>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 50,
+  boxContainerOne: {
+    backgroundColor: 'darkorange',
+    flex: 1,
+    padding: 20,
+    marginRight: 5
   },
-  inputContainer: {
+  boxContainerTwo: {
+    backgroundColor: 'green',
+    flex: 1,
+    padding: 20,
+    marginLeft: 5,
+    marginRight: 5,
+  },
+  boxContainerThree: {
+    backgroundColor: 'red',
+    flex: 1,
+    padding: 20,
+    marginLeft: 5
+  },
+  allContainer: {
     flexDirection: 'column',
-    justifyContent: 'space-between'
+    flex: 1,
+    marginTop: 50
   },
-  textInput: {
+  searchContainer: {
+    flexDirection: 'row',
+    // flex: 1
+  },
+  container: {
+    flexDirection: 'row',
+    flex: 1
+  },
+  input: {
     borderWidth: 1,
-    borderColor: 'aqua',
-    padding: 8,
-    marginRight: 8,
-    margin: 8,
-    borderRadius: 6,
+    borderColor: 'red',
+    height: 40,
+    flex: 1,
+    margin: 5,
+    padding: 5
+  },
+  btn: {
+    margin: 5,
+    padding: 5,
+    margin: 5,
   }
 }) 
