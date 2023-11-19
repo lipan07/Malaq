@@ -1,33 +1,51 @@
-import {React, useState} from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TextInput, Button, Alert, Pressable } from 'react-native';
+import { React, useState } from "react";
+import { StatusBar } from "expo-status-bar";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  Button,
+  Alert,
+  Pressable,
+} from "react-native";
 
 export default function App() {
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState("");
   const [courseGoals, setCourseGoals] = useState([]);
   const inputTextHandler = (inputText) => {
-    setInputText(inputText)
-  }
+    setInputText(inputText);
+  };
   const handlePress = () => {
     // console.log('Do not click this button again!!');
     // Alert.alert('Do not click this button again!!');
-    setCourseGoals((currentCourseGoals) => [
-      ...currentCourseGoals, inputText
-    ])
+    setCourseGoals((currentCourseGoals) => [...currentCourseGoals, inputText]);
     console.log(courseGoals);
   };
   return (
     <View style={styles.allContainer}>
       <View style={styles.searchContainer}>
-        <TextInput style={styles.input} placeholder="Type here.." onChangeText={inputTextHandler}/>
-        <Pressable style={styles.btn} title="Click here.." onPress={handlePress}>
+        <TextInput
+          style={styles.input}
+          placeholder="Type here.."
+          onChangeText={inputTextHandler}
+        />
+        <Pressable
+          style={styles.btn}
+          title="Click here.."
+          onPress={handlePress}
+        >
           <Text>Click here..</Text>
         </Pressable>
       </View>
       <View>
-        {courseGoals.map((goal,i)=>
-          <Text key={i} style={styles.goal}>{i+1}. {goal}</Text>
-        )}
+        {courseGoals.map((goal, i) => (
+          <View key={i} style={styles.goalView}>
+            <Text style={styles.goal}>
+              {i + 1}. {goal}
+            </Text>
+          </View>
+        ))}
       </View>
 
       <View style={styles.container}>
@@ -49,52 +67,60 @@ export default function App() {
 
 const styles = StyleSheet.create({
   boxContainerOne: {
-    backgroundColor: 'darkorange',
+    backgroundColor: "darkorange",
     flex: 1,
     padding: 20,
-    marginRight: 5
+    marginRight: 5,
   },
   boxContainerTwo: {
-    backgroundColor: 'green',
+    backgroundColor: "green",
     flex: 1,
     padding: 20,
     marginLeft: 5,
     marginRight: 5,
   },
   boxContainerThree: {
-    backgroundColor: 'red',
+    backgroundColor: "red",
     flex: 1,
     padding: 20,
-    marginLeft: 5
+    marginLeft: 5,
   },
   allContainer: {
-    flexDirection: 'column',
+    flexDirection: "column",
     flex: 1,
-    marginTop: 50
+    marginTop: 50,
   },
   searchContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     // flex: 1
   },
   container: {
-    flexDirection: 'row',
-    flex: 1
+    flexDirection: "row",
+    flex: 1,
   },
   input: {
     borderWidth: 1,
-    borderColor: 'red',
+    borderColor: "red",
     height: 40,
     flex: 1,
     margin: 5,
-    padding: 5
+    padding: 5,
   },
   btn: {
     margin: 5,
     padding: 5,
     margin: 5,
   },
-  goal:{
-    margin:2,
-    padding:10,
-  }
-}) 
+  goal: {
+    margin: 2,
+    padding: 10,
+    fontWeight: "bold",
+    color: "#ffff",
+  },
+  goalView: {
+    borderWidth: 1,
+    borderColor: "blue",
+    backgroundColor: "green",
+    marginBottom: 2,
+  },
+});
