@@ -1,19 +1,33 @@
-import React from 'react';
+import {React, useState} from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TextInput, Button, Alert, Pressable } from 'react-native';
 
 export default function App() {
+  const [inputText, setInputText] = useState('');
+  const [courseGoals, setCourseGoals] = useState([]);
+  const inputTextHandler = (inputText) => {
+    setInputText(inputText)
+  }
   const handlePress = () => {
-    console.log('Do not click this button again!!');
-    Alert.alert('Do not click this button again!!');
+    // console.log('Do not click this button again!!');
+    // Alert.alert('Do not click this button again!!');
+    setCourseGoals((currentCourseGoals) => [
+      ...currentCourseGoals, inputText
+    ])
+    console.log(courseGoals);
   };
   return (
     <View style={styles.allContainer}>
       <View style={styles.searchContainer}>
-        <TextInput style={styles.input} placeholder="Type here.." />
+        <TextInput style={styles.input} placeholder="Type here.." onChangeText={inputTextHandler}/>
         <Pressable style={styles.btn} title="Click here.." onPress={handlePress}>
           <Text>Click here..</Text>
         </Pressable>
+      </View>
+      <View>
+        {courseGoals.map((goal,i)=>
+          <Text key={i} style={styles.goal}>{i+1}. {goal}</Text>
+        )}
       </View>
 
       <View style={styles.container}>
@@ -78,5 +92,9 @@ const styles = StyleSheet.create({
     margin: 5,
     padding: 5,
     margin: 5,
+  },
+  goal:{
+    margin:2,
+    padding:10,
   }
 }) 
