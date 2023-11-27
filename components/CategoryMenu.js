@@ -10,10 +10,10 @@ const CategoryMenu = () => {
     { id: '2', name: 'Properties', icon: 'home' },
     { id: '3', name: 'Mobile', icon: 'phone-portrait' },
     { id: '4', name: 'Electronics', icon: 'tv' },
-    { id: '5', name: 'Bikes', icon: 'tv' },
-    { id: '6', name: 'Furniture', icon: 'tv' },
-    { id: '7', name: 'Fashion', icon: 'tv' },
-    { id: '8', name: 'Books', icon: 'tv' },
+    { id: '5', name: 'Bikes', icon: 'bicycle' },
+    { id: '6', name: 'Furniture', icon: 'bed' },
+    { id: '7', name: 'Fashion', icon: 'shirt' },
+    { id: '8', name: 'Books', icon: 'book' },
     // Add more categories with their respective icon names
   ];
 
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
-    marginTop: 50,
+    marginTop: 40,
   },
   categoryItem: {
     marginRight: 20,
