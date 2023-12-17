@@ -1,24 +1,31 @@
-// Updated Product.js
-
 import React from 'react';
-import { View, Text, Image, StyleSheet, FlatList } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
 
 const Product = ({ product }) => {
+  const navigation = useNavigation(); // Access navigation object
+
+  const handleProductPress = () => {
+    // Navigate to ProductDetailsPage and pass the productId as a parameter
+    navigation.navigate('ProductDetails', { productId: product.id });
+  };
   return (
-    <View style={styles.card}>
-      <FlatList
-        data={product.images}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <Image source={{ uri: item }} style={styles.image} resizeMode="cover" />
-        )}
-      />
-      <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{product.name}</Text>
-      <Text style={styles.details} numberOfLines={2} ellipsizeMode="tail">{product.details}</Text>
-      <Text style={styles.price}>Price: ${product.price}</Text>
-    </View>
+    <TouchableOpacity onPress={handleProductPress}>
+      <View style={styles.card}>
+        <FlatList
+          data={product.images}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+            <Image source={{ uri: item }} style={styles.image} resizeMode="cover" />
+          )}
+        />
+        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{product.name}</Text>
+        <Text style={styles.details} numberOfLines={2} ellipsizeMode="tail">{product.details}</Text>
+        <Text style={styles.price}>Price: ${product.price}</Text>
+      </View>
+    </TouchableOpacity >
   );
 };
 
