@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Keyboard, ScrollView, KeyboardAvoidingView, StyleSheet } from 'react-native';
+import BottomNavBar from './BottomNavBar';
+import { useNavigation } from '@react-navigation/native';
 
 const ChatBox = () => {
+  const navigation = useNavigation();
   const inputRef = useRef(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [showMessageOptions, setShowMessageOptions] = useState(false);
@@ -39,6 +42,10 @@ const ChatBox = () => {
 
   const handleDismissKeyboard = () => {
     Keyboard.dismiss();
+  };
+
+  const handleProductPress = (productId) => {
+      navigation.navigate('ProductDetails', { productId });
   };
 
   return (
@@ -85,6 +92,7 @@ const ChatBox = () => {
           </TouchableOpacity>
         </View>
       </View>
+      <BottomNavBar navigation={navigation} />
     </TouchableOpacity>
   );
 };
@@ -107,6 +115,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#CCCCCC',
     padding: 10,
+    marginBottom:80,
   },
   messageOptionsContainer: {
     maxHeight: 100,

@@ -1,13 +1,10 @@
 import React from 'react';
 import { View, ScrollView, Text, Image, StyleSheet, TouchableOpacity, Linking } from 'react-native';
-// import MapView from 'react-native-maps'; // Import MapView from react-native-maps
 import { useNavigation } from '@react-navigation/native';
-import ChatBox from './ChatBox';
-
+import BottomNavBar from './BottomNavBar';
 const ProductDetails = ({ route }) => {
     // Access the productId passed from the Product component
     const { productId } = route.params;
-    const navigation = useNavigation();
     // Assuming you have a function to fetch product details based on productId
     // Replace this with your actual data-fetching logic
     const getProductDetails = (id) => {
@@ -25,8 +22,8 @@ const ProductDetails = ({ route }) => {
             },
             images: [
                 'https://5.imimg.com/data5/SELLER/Default/2023/5/306160939/BW/BZ/WU/116672918/apple-macbook-air-500x500.PNG',
-            'https://inventstore.in/wp-content/uploads/2023/05/macbook-pro-13-silver.png',
-            'https://images.news18.com/ibnlive/uploads/2023/10/macbook-air-m1-2023-10-c3ced763eda4931bd195f9e7ff255169.jpg',
+                'https://inventstore.in/wp-content/uploads/2023/05/macbook-pro-13-silver.png',
+                'https://images.news18.com/ibnlive/uploads/2023/10/macbook-air-m1-2023-10-c3ced763eda4931bd195f9e7ff255169.jpg',
             ],
             // Add more details as needed
         };
@@ -34,20 +31,23 @@ const ProductDetails = ({ route }) => {
 
     // Fetch the product details based on the productId
     const product = getProductDetails(productId);
+    const navigation = useNavigation();
+
+    const handleImagePress = (imageIndex) => {
+        navigation.navigate('ImageViewer', { images: product.images, selectedImageIndex: imageIndex });
+    };
 
     const handleCallPress = () => {
-        // Check if the device supports phone calls
-        Linking.canOpenURL(`tel:${product.phoneNumber}`).then((supported) => {
-            if (supported) {
-                // Open the phone app with the specified phone number
-                Linking.openURL(`tel:${product.phoneNumber}`);
-            } else {
-                console.log("Phone calls are not available on this device.");
-            }
-        });
+        // Handle call functionality...
     };
+
     const handleChatPress = () => {
-        navigation.navigate('ChatBox'); // Navigate to the 'ChatBox' screen
+        // Handle chat functionality...
+    };
+
+    const handleCompanyNamePress = () => {
+        // Navigate to the CompanyDetailsPage when company name is clicked
+        navigation.navigate('CompanyDetailsPage', 'Malaq');
     };
     return (
         <View style={styles.container}>
@@ -55,12 +55,17 @@ const ProductDetails = ({ route }) => {
                 {/* Horizontal scrollable images */}
                 <ScrollView horizontal style={styles.imageContainer}>
                     {product.images.map((image, index) => (
-                        <Image key={index} source={{ uri: image }} style={styles.image} />
+                        <TouchableOpacity key={index} onPress={() => handleImagePress(index)}>
+                            <Image source={{ uri: image }} style={styles.image} />
+                        </TouchableOpacity>
                     ))}
                 </ScrollView>
 
                 {/* Product details */}
                 <View style={styles.detailsContainer}>
+                    <Text style={styles.companyName} onPress={handleCompanyNamePress}>
+                        Company Name
+                    </Text>
                     <Text style={styles.name}>{product.name}</Text>
                     <Text style={styles.description}>{product.description}</Text>
                     <Text style={styles.price}>Price: ${product.price}</Text>
@@ -78,6 +83,7 @@ const ProductDetails = ({ route }) => {
                     /> */}
                 </View>
             </ScrollView>
+
             {/* Chat and Call buttons */}
             <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.chatButton} onPress={handleChatPress}>
@@ -87,9 +93,12 @@ const ProductDetails = ({ route }) => {
                     <Text style={styles.buttonText}>Call</Text>
                 </TouchableOpacity>
             </View>
+            {/* Bottom navigation bar */}
+            <BottomNavBar />
         </View>
     );
 };
+
 
 const styles = StyleSheet.create({
     container: {
@@ -111,6 +120,12 @@ const styles = StyleSheet.create({
     name: {
         fontSize: 24,
         fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    companyName: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        textDecorationLine: 'underline',
         marginBottom: 10,
     },
     description: {
@@ -137,7 +152,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        paddingBottom: 20,
+        paddingBottom: 10,
     },
     chatButton: {
         backgroundColor: '#007bff',

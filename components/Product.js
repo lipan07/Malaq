@@ -1,31 +1,45 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
+import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 const Product = ({ product }) => {
-  const navigation = useNavigation(); // Access navigation object
+  const navigation = useNavigation();
 
   const handleProductPress = () => {
-    // Navigate to ProductDetailsPage and pass the productId as a parameter
     navigation.navigate('ProductDetails', { productId: product.id });
   };
+
+  const handleImagePress = (index) => {
+    navigation.navigate('ImageViewer', {
+      images: product.images,
+      selectedImageIndex: index,
+    });
+  };
+
+  const renderImageItem = ({ item, index }) => (
+    <TouchableOpacity onPress={() => handleImagePress(index)} style={styles.imageContainer}>
+      <Image source={{ uri: item }} style={styles.image} />
+    </TouchableOpacity>
+  );
+
   return (
-    <TouchableOpacity onPress={handleProductPress}>
-      <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={handleProductPress}>
+      <View style={styles.imageList}>
         <FlatList
           data={product.images}
+          renderItem={renderImageItem}
+          keyExtractor={(item, index) => index.toString()}
           horizontal
           showsHorizontalScrollIndicator={false}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <Image source={{ uri: item }} style={styles.image} resizeMode="cover" />
-          )}
         />
+      </View>
+
+      <View style={styles.detailsContainer}>
         <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{product.name}</Text>
         <Text style={styles.details} numberOfLines={2} ellipsizeMode="tail">{product.details}</Text>
         <Text style={styles.price}>Price: ${product.price}</Text>
       </View>
-    </TouchableOpacity >
+    </TouchableOpacity>
   );
 };
 
@@ -33,25 +47,31 @@ const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 5,
+    borderRadius: 10,
     padding: 10,
     margin: 10,
     backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
     shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowRadius: 2,
+    elevation: 3,
   },
-  image: {
-    width: 200,
-    height: 200,
-    resizeMode: 'cover', // Deprecated, replaced by resizeMode="cover" in Image component
-    borderRadius: 5,
+  imageContainer: {
+    height: 120,
+    width: 120,
     marginRight: 10,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  imageList: {
+    marginBottom: 10,
+  },
+  detailsContainer: {
+    flex: 1,
   },
   title: {
     fontWeight: 'bold',
@@ -67,6 +87,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: 'green',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
 });
 
