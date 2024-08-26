@@ -34,12 +34,14 @@ const ImageViewer = ({ route, navigation }) => {
                     {/* Next and Previous Icons */}
                     <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
                         <View style={styles.transparentCircle}>
-                            <Ionicons name="ios-arrow-forward" size={30} color="white" />
+                            {/* <Ionicons name="ios-arrow-forward" size={30} color="white" /> */}
+                            <Ionicons name="arrow-forward" size={30} color="white" />
                         </View>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.previousButton} onPress={handlePrevious}>
                         <View style={styles.transparentCircle}>
-                            <Ionicons name="ios-arrow-back" size={30} color="white" />
+                            {/* <Ionicons name="ios-arrow-back" size={30} color="white" /> */}
+                            <Ionicons name="arrow-forward" size={30} color="white" />
                         </View>
                     </TouchableOpacity>
                 </View>

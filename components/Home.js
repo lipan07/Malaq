@@ -1,11 +1,13 @@
 import React, { useState, useRef } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { View, ScrollView, StyleSheet, TouchableOpacity, Modal, Text, TextInput, Button, FlatList, Dimensions, TouchableWithoutFeedback, Keyboard } from 'react-native';// Assuming Product.js is in the same directory
 import Icon from 'react-native-vector-icons/Ionicons'
 import Product from './Product'; // Assuming Product.js is in the same directory
 import CategoryMenu from './CategoryMenu';
 import BottomNavBar from './BottomNavBar';
 import { BASE_URL } from '@env';
-
+const token = '1|0yVAvaHLiVyMtPLR4477UG8o4w0jbP6h9eaxhPap48e3bfcf';
 // Your product data remains the same
 const productData = [
   {
@@ -131,7 +133,7 @@ const Home = () => {
     { id: '1', name: 'Kolkata- Agarpara' },
     { id: '2', name: 'Kolkata- Sodepur' },
     { id: '3', name: 'Kolkata- Barrackpore' },
-    // Add more addresses as needed
+    // Add more addresses as needed //
   ]);
 
   const [showAddressModal, setShowAddressModal] = useState(false);
@@ -145,45 +147,57 @@ const Home = () => {
   const [showOtpField, setShowOtpField] = useState(false);
 
   const handlePhoneNumberSubmit = async () => {
-    try {
-      console.log(`${BASE_URL}/send-sms?phoneNumber=${phoneNumber}`);
+    // try {
+      console.log(`${BASE_URL}/send-sms`);
       // Make an API request to send OTP to the provided phone number
-      const response = await fetch(`${BASE_URL}/send-sms?phoneNumber=${phoneNumber}`, {
-        method: 'GET',
+      const response = await fetch(`${BASE_URL}/send-sms`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Accept': '*',
         },
+        body: JSON.stringify({
+          phoneNumber: phoneNumber
+        }),
       });
 
+      console.log(response);
       if (response.ok) {
         // OTP sent successfully
         setShowOtpField(true); // Show the OTP input field
+
+        console.log('Success');
       } else {
         // Handle errors, maybe display an error message to the user
         console.error('Failed to send OTP');
+
+        setShowOtpField(true); // Show the OTP input field
       }
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-    }
+    // } catch (error) {
+    //   console.error('Error sending OTP:', error);
+    // }
   };
 
   const handleOtpSubmit = async () => {
     try {
       // Make an API request to verify the OTP
-      const response = await fetch('YOUR_VERIFY_OTP_API_URL', {
+      const response = await fetch(`${BASE_URL}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           phoneNumber: phoneNumber,
-          otp: otp,
+          password: otp,
         }),
       });
 
       if (response.ok) {
+        const data = await response.json();
+        const token = data.token; // Assuming the token is returned in the response
+
+        // Store the token in AsyncStorage
+        await AsyncStorage.setItem('authToken', token);
+
         // OTP verification successful, proceed with login
         console.log('OTP verification successful');
         // You can add logic here to handle successful login
@@ -317,8 +331,11 @@ const Home = () => {
                   onChangeText={(text) => setOtp(text)}
                 />
               )}
+              <TouchableOpacity style={styles.resendButton} onPress={handlePhoneNumberSubmit}>
+                <Text style={styles.buttonText}>Resend OTP</Text>
+              </TouchableOpacity>
               <TouchableOpacity style={styles.submitButton} onPress={showOtpField ? handleOtpSubmit : handlePhoneNumberSubmit}>
-                <Text style={styles.buttonText}>{showOtpField ? 'Submit OTP' : 'Submit Phone Number'}</Text>
+                <Text style={styles.buttonText}>{!showOtpField ? 'Send OTP' : 'Login or Signup'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -525,6 +542,13 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: 'white',
+  },
+  resendButton: {
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+    marginBottom: 10,
   },
 });
 
