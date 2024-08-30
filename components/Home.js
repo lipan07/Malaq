@@ -6,8 +6,10 @@ import Icon from 'react-native-vector-icons/Ionicons'
 import Product from './Product'; // Assuming Product.js is in the same directory
 import CategoryMenu from './CategoryMenu';
 import BottomNavBar from './BottomNavBar';
-import { BASE_URL } from '@env';
-const token = '1|0yVAvaHLiVyMtPLR4477UG8o4w0jbP6h9eaxhPap48e3bfcf';
+import { BASE_URL, TOKEN } from '@env';
+const base_url = BASE_URL;
+console.log(base_url);
+const token = TOKEN;
 // Your product data remains the same
 const productData = [
   {
@@ -148,30 +150,32 @@ const Home = () => {
 
   const handlePhoneNumberSubmit = async () => {
     // try {
-      console.log(`${BASE_URL}/send-sms`);
-      // Make an API request to send OTP to the provided phone number
-      const response = await fetch(`${BASE_URL}/send-sms`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          phoneNumber: phoneNumber
-        }),
-      });
 
-      console.log(response);
-      if (response.ok) {
-        // OTP sent successfully
-        setShowOtpField(true); // Show the OTP input field
+    console.log(base_url);
+    console.log(`${base_url}/send-sms`);
+    // Make an API request to send OTP to the provided phone number
+    const response = await fetch(`${base_url}/send-sms`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        phoneNumber: phoneNumber
+      }),
+    });
 
-        console.log('Success');
-      } else {
-        // Handle errors, maybe display an error message to the user
-        console.error('Failed to send OTP');
+    console.log(response);
+    if (response.ok) {
+      // OTP sent successfully
+      setShowOtpField(true); // Show the OTP input field
 
-        setShowOtpField(true); // Show the OTP input field
-      }
+      console.log('Success');
+    } else {
+      // Handle errors, maybe display an error message to the user
+      console.error('Failed to send OTP');
+
+      setShowOtpField(true); // Show the OTP input field
+    }
     // } catch (error) {
     //   console.error('Error sending OTP:', error);
     // }
@@ -180,7 +184,7 @@ const Home = () => {
   const handleOtpSubmit = async () => {
     try {
       // Make an API request to verify the OTP
-      const response = await fetch(`${BASE_URL}/login`, {
+      const response = await fetch(`${base_url}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
