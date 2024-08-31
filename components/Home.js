@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { View, ScrollView, StyleSheet, TouchableOpacity, Modal, Text, TextInput, Button, FlatList, Dimensions, TouchableWithoutFeedback, Keyboard } from 'react-native';// Assuming Product.js is in the same directory
+import { View, ScrollView, StyleSheet, TouchableOpacity, Modal, Text, TextInput, Button, FlatList, Dimensions, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native';// Assuming Product.js is in the same directory
 import Icon from 'react-native-vector-icons/Ionicons'
 import Product from './Product'; // Assuming Product.js is in the same directory
 import CategoryMenu from './CategoryMenu';
@@ -11,121 +11,121 @@ const base_url = BASE_URL;
 console.log(base_url);
 const token = TOKEN;
 // Your product data remains the same
-const productData = [
-  {
-    id: 1,
-    name: 'Product 1',
-    details: 'Product 1 details',
-    price: 19.99,
-    images: [
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQyyXKb7vod4zTz0YL9wIR6S3mQkwk7H3E0w&usqp=CAU',
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTKRKBGE_6z4d4gkVJz7dN7ZaUI8rVTHjpEjpCtg0t-jobtnj5LwI1ajOuJIZlK1jDmhLM&usqp=CAU',
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR33NA0o2O431_3DgCIItMmIGlrTqJHZNJEWiAZt8jXPHdQPiM2GC4NvCL_Ki3UKtcC-68&usqp=CAU',
-    ],
-  },
-  {
-    id: 2,
-    name: 'Product 2',
-    details: 'Product 2 details',
-    price: 19.99,
-    images: [
-      'https://cdn.theluxurycloset.com/uploads/opt/products/750x750/luxury-women-gucci-used-handbags-p699377-009.jpg',
-      'https://cdn-images.farfetch-contents.com/15/41/36/65/15413665_27241613_300.jpg',
-      'https://www.retyche.com/cdn/shop/files/W34_RETYCHE_ECOMM_08.16.20236572_grande.jpg?v=1692369269',
-    ],
-  },
-  {
-    id: 3,
-    name: 'Product 3',
-    details: 'Product 3 details',
-    price: 19.99,
-    images: [
-      'https://5.imimg.com/data5/SELLER/Default/2023/5/306160939/BW/BZ/WU/116672918/apple-macbook-air-500x500.PNG',
-      'https://inventstore.in/wp-content/uploads/2023/05/macbook-pro-13-silver.png',
-      'https://images.news18.com/ibnlive/uploads/2023/10/macbook-air-m1-2023-10-c3ced763eda4931bd195f9e7ff255169.jpg',
-    ],
-  },
-  {
-    id: 4,
-    name: 'Product 4',
-    details: 'Product 4 details- The Kyra Halo Solitaire Ring is a breathtaking and elegant piece of jewellery that is perfect for any occasion. This stunning ring features a single, sparkling diamond that is surrounded by a halo of smaller diamonds, all set in a sleek, gold setting. The timeless and classic design of the ring adds a touch of glamour and sophistication to any outfit. Whether for everyday wear or for special occasions, the Kyra Halo Solitaire Ring is a must-have addition to any jewellery collection.',
-    price: 19.99,
-    images: [
-      'https://www.sparklejewels.in/wp-content/uploads/2022/01/R01628-02.jpg',
-      'https://chandranipearls.in/cdn/shop/files/infinity-fore-life-18kt-gold-and-diamond-ring-chandrani-pearls-1.jpg?v=1695120968&width=1946',
-      'https://i.ebayimg.com/images/g/D9UAAOSw3dJjeJkF/s-l1200.webp',
-    ],
-  },
-  {
-    id: 5,
-    name: 'Product 5',
-    details: 'Product 5 details',
-    price: 19.99,
-    images: [
-      'https://i.ebayimg.com/images/g/D9UAAOSw3dJjeJkF/s-l1200.webp',
-      'https://i.ebayimg.com/images/g/D9UAAOSw3dJjeJkF/s-l1200.webp',
-      'https://i.ebayimg.com/images/g/D9UAAOSw3dJjeJkF/s-l1200.webp',
-    ],
-  },
-  {
-    id: 6,
-    name: 'Product 6',
-    details: 'Product 6 details',
-    price: 19.99,
-    images: [
-      'https://rukminim2.flixcart.com/image/832/832/xif0q/lehenga-choli/c/4/v/free-sleeveless-new-designer-embroidred-sequins-heavy-work-original-imaggpyahr8hpvrr.jpeg?q=70',
-      'https://rukminim2.flixcart.com/image/832/832/xif0q/lehenga-choli/p/p/g/free-sleeveless-new-designer-embroidred-sequins-heavy-work-original-imaggpya9whb9f9q.jpeg?q=70',
-      'https://rukminim2.flixcart.com/image/832/832/xif0q/lehenga-choli/p/n/p/free-half-sleeve-dandiya-dress-flared-lehenga-trend-lehenga-original-imagh6qshzqjy24y.jpeg?q=70',
-      'https://rukminim2.flixcart.com/image/832/832/xif0q/lehenga-choli/z/y/k/free-half-sleeve-dandiya-dress-flared-lehenga-trend-lehenga-original-imagh6qsyssarf3z.jpeg?q=70',
-    ],
-  },
-  {
-    id: 7,
-    name: 'Product 7',
-    details: 'Product 7 details',
-    price: 19.99,
-    images: [
-      'https://rukminim2.flixcart.com/image/416/416/xif0q/mobile/u/m/b/-original-imagrdefbw6bhbjr.jpeg?q=70',
-      'https://rukminim2.flixcart.com/image/416/416/xif0q/mobile/l/s/n/-original-imagrdeframtgucc.jpeg?q=70',
-      'https://rukminim2.flixcart.com/image/416/416/xif0q/mobile/g/7/d/-original-imagrdef889hmmq9.jpeg?q=70',
-      'https://rukminim2.flixcart.com/image/416/416/xif0q/mobile/0/i/n/-original-imagrdefzqhqqw5u.jpeg?q=70',
-    ],
-  },
-  {
-    id: 8,
-    name: 'Product 8',
-    details: 'Product 8 details',
-    price: 19.99,
-    images: [
-      'https://rukminim2.flixcart.com/image/832/832/xif0q/t-shirt/c/y/a/xs-t592-pgwh-eyebogler-original-imagh3fzebaetetf.jpeg?q=70',
-      'https://rukminim2.flixcart.com/image/832/832/xif0q/t-shirt/k/i/h/xs-t592-pgwh-eyebogler-original-imagh3fz9fvpzck9.jpeg?q=70',
-      'https://rukminim2.flixcart.com/image/832/832/xif0q/t-shirt/5/n/u/l-t592-blwh-eyebogler-original-imagh3fzg53hvttf.jpeg?q=70',
-    ],
-  },
-  {
-    id: 9,
-    name: 'Product 9',
-    details: 'Product 9 details',
-    price: 19.99,
-    images: [
-      'https://rukminim2.flixcart.com/image/416/416/xif0q/motorcycle/q/z/n/-original-imagtbmaq6bgbkh5.jpeg?q=70',
-      'https://rukminim2.flixcart.com/image/416/416/xif0q/motorcycle/u/f/z/-original-imagtbmavcgxp8bb.jpeg?q=70',
-      'https://rukminim2.flixcart.com/image/416/416/xif0q/motorcycle/x/g/q/-original-imagtbma7xheharg.jpeg?q=70',
-    ],
-  },
-  {
-    id: 10,
-    name: 'Product 10',
-    details: 'Product 10 details',
-    price: 19.88,
-    images: [
-      'https://rukminim2.flixcart.com/image/416/416/xif0q/chimney/s/h/o/-original-imagngfjzrpzseyg.jpeg?q=70',
-      'https://rukminim2.flixcart.com/image/416/416/xif0q/chimney/2/t/c/-original-imagsrgzrbkwkgfc.jpeg?q=70',
-      'https://rukminim2.flixcart.com/image/416/416/xif0q/chimney/2/4/4/-original-imagsrgzkjnefgwp.jpeg?q=70',
-    ],
-  },
-  // Add more products here in the same format
-];
+// const productData = [
+//   {
+//     id: 1,
+//     name: 'Product 1',
+//     details: 'Product 1 details',
+//     price: 19.99,
+//     images: [
+//       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQyyXKb7vod4zTz0YL9wIR6S3mQkwk7H3E0w&usqp=CAU',
+//       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTKRKBGE_6z4d4gkVJz7dN7ZaUI8rVTHjpEjpCtg0t-jobtnj5LwI1ajOuJIZlK1jDmhLM&usqp=CAU',
+//       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR33NA0o2O431_3DgCIItMmIGlrTqJHZNJEWiAZt8jXPHdQPiM2GC4NvCL_Ki3UKtcC-68&usqp=CAU',
+//     ],
+//   },
+//   {
+//     id: 2,
+//     name: 'Product 2',
+//     details: 'Product 2 details',
+//     price: 19.99,
+//     images: [
+//       'https://cdn.theluxurycloset.com/uploads/opt/products/750x750/luxury-women-gucci-used-handbags-p699377-009.jpg',
+//       'https://cdn-images.farfetch-contents.com/15/41/36/65/15413665_27241613_300.jpg',
+//       'https://www.retyche.com/cdn/shop/files/W34_RETYCHE_ECOMM_08.16.20236572_grande.jpg?v=1692369269',
+//     ],
+//   },
+//   {
+//     id: 3,
+//     name: 'Product 3',
+//     details: 'Product 3 details',
+//     price: 19.99,
+//     images: [
+//       'https://5.imimg.com/data5/SELLER/Default/2023/5/306160939/BW/BZ/WU/116672918/apple-macbook-air-500x500.PNG',
+//       'https://inventstore.in/wp-content/uploads/2023/05/macbook-pro-13-silver.png',
+//       'https://images.news18.com/ibnlive/uploads/2023/10/macbook-air-m1-2023-10-c3ced763eda4931bd195f9e7ff255169.jpg',
+//     ],
+//   },
+//   {
+//     id: 4,
+//     name: 'Product 4',
+//     details: 'Product 4 details- The Kyra Halo Solitaire Ring is a breathtaking and elegant piece of jewellery that is perfect for any occasion. This stunning ring features a single, sparkling diamond that is surrounded by a halo of smaller diamonds, all set in a sleek, gold setting. The timeless and classic design of the ring adds a touch of glamour and sophistication to any outfit. Whether for everyday wear or for special occasions, the Kyra Halo Solitaire Ring is a must-have addition to any jewellery collection.',
+//     price: 19.99,
+//     images: [
+//       'https://www.sparklejewels.in/wp-content/uploads/2022/01/R01628-02.jpg',
+//       'https://chandranipearls.in/cdn/shop/files/infinity-fore-life-18kt-gold-and-diamond-ring-chandrani-pearls-1.jpg?v=1695120968&width=1946',
+//       'https://i.ebayimg.com/images/g/D9UAAOSw3dJjeJkF/s-l1200.webp',
+//     ],
+//   },
+//   {
+//     id: 5,
+//     name: 'Product 5',
+//     details: 'Product 5 details',
+//     price: 19.99,
+//     images: [
+//       'https://i.ebayimg.com/images/g/D9UAAOSw3dJjeJkF/s-l1200.webp',
+//       'https://i.ebayimg.com/images/g/D9UAAOSw3dJjeJkF/s-l1200.webp',
+//       'https://i.ebayimg.com/images/g/D9UAAOSw3dJjeJkF/s-l1200.webp',
+//     ],
+//   },
+//   {
+//     id: 6,
+//     name: 'Product 6',
+//     details: 'Product 6 details',
+//     price: 19.99,
+//     images: [
+//       'https://rukminim2.flixcart.com/image/832/832/xif0q/lehenga-choli/c/4/v/free-sleeveless-new-designer-embroidred-sequins-heavy-work-original-imaggpyahr8hpvrr.jpeg?q=70',
+//       'https://rukminim2.flixcart.com/image/832/832/xif0q/lehenga-choli/p/p/g/free-sleeveless-new-designer-embroidred-sequins-heavy-work-original-imaggpya9whb9f9q.jpeg?q=70',
+//       'https://rukminim2.flixcart.com/image/832/832/xif0q/lehenga-choli/p/n/p/free-half-sleeve-dandiya-dress-flared-lehenga-trend-lehenga-original-imagh6qshzqjy24y.jpeg?q=70',
+//       'https://rukminim2.flixcart.com/image/832/832/xif0q/lehenga-choli/z/y/k/free-half-sleeve-dandiya-dress-flared-lehenga-trend-lehenga-original-imagh6qsyssarf3z.jpeg?q=70',
+//     ],
+//   },
+//   {
+//     id: 7,
+//     name: 'Product 7',
+//     details: 'Product 7 details',
+//     price: 19.99,
+//     images: [
+//       'https://rukminim2.flixcart.com/image/416/416/xif0q/mobile/u/m/b/-original-imagrdefbw6bhbjr.jpeg?q=70',
+//       'https://rukminim2.flixcart.com/image/416/416/xif0q/mobile/l/s/n/-original-imagrdeframtgucc.jpeg?q=70',
+//       'https://rukminim2.flixcart.com/image/416/416/xif0q/mobile/g/7/d/-original-imagrdef889hmmq9.jpeg?q=70',
+//       'https://rukminim2.flixcart.com/image/416/416/xif0q/mobile/0/i/n/-original-imagrdefzqhqqw5u.jpeg?q=70',
+//     ],
+//   },
+//   {
+//     id: 8,
+//     name: 'Product 8',
+//     details: 'Product 8 details',
+//     price: 19.99,
+//     images: [
+//       'https://rukminim2.flixcart.com/image/832/832/xif0q/t-shirt/c/y/a/xs-t592-pgwh-eyebogler-original-imagh3fzebaetetf.jpeg?q=70',
+//       'https://rukminim2.flixcart.com/image/832/832/xif0q/t-shirt/k/i/h/xs-t592-pgwh-eyebogler-original-imagh3fz9fvpzck9.jpeg?q=70',
+//       'https://rukminim2.flixcart.com/image/832/832/xif0q/t-shirt/5/n/u/l-t592-blwh-eyebogler-original-imagh3fzg53hvttf.jpeg?q=70',
+//     ],
+//   },
+//   {
+//     id: 9,
+//     name: 'Product 9',
+//     details: 'Product 9 details',
+//     price: 19.99,
+//     images: [
+//       'https://rukminim2.flixcart.com/image/416/416/xif0q/motorcycle/q/z/n/-original-imagtbmaq6bgbkh5.jpeg?q=70',
+//       'https://rukminim2.flixcart.com/image/416/416/xif0q/motorcycle/u/f/z/-original-imagtbmavcgxp8bb.jpeg?q=70',
+//       'https://rukminim2.flixcart.com/image/416/416/xif0q/motorcycle/x/g/q/-original-imagtbma7xheharg.jpeg?q=70',
+//     ],
+//   },
+//   {
+//     id: 10,
+//     name: 'Product 10',
+//     details: 'Product 10 details',
+//     price: 19.88,
+//     images: [
+//       'https://rukminim2.flixcart.com/image/416/416/xif0q/chimney/s/h/o/-original-imagngfjzrpzseyg.jpeg?q=70',
+//       'https://rukminim2.flixcart.com/image/416/416/xif0q/chimney/2/t/c/-original-imagsrgzrbkwkgfc.jpeg?q=70',
+//       'https://rukminim2.flixcart.com/image/416/416/xif0q/chimney/2/4/4/-original-imagsrgzkjnefgwp.jpeg?q=70',
+//     ],
+//   },
+//   // Add more products here in the same format
+// ];
 
 const Home = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -147,38 +147,37 @@ const Home = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [showOtpField, setShowOtpField] = useState(false);
+  const [productData, setProductData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const handlePhoneNumberSubmit = async () => {
-    // try {
+    try {
+      // Make an API request to send OTP to the provided phone number
+      const response = await fetch(`${base_url}/send-sms`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phoneNumber: phoneNumber
+        }),
+      });
 
-    console.log(base_url);
-    console.log(`${base_url}/send-sms`);
-    // Make an API request to send OTP to the provided phone number
-    const response = await fetch(`${base_url}/send-sms`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        phoneNumber: phoneNumber
-      }),
-    });
+      console.log(response);
+      if (response.ok) {
+        // OTP sent successfully
+        setShowOtpField(true); // Show the OTP input field
 
-    console.log(response);
-    if (response.ok) {
-      // OTP sent successfully
-      setShowOtpField(true); // Show the OTP input field
+        console.log('Success');
+      } else {
+        // Handle errors, maybe display an error message to the user
+        console.error('Failed to send OTP');
 
-      console.log('Success');
-    } else {
-      // Handle errors, maybe display an error message to the user
-      console.error('Failed to send OTP');
-
-      setShowOtpField(true); // Show the OTP input field
+        setShowOtpField(true); // Show the OTP input field
+      }
+    } catch (error) {
+      console.error('Error sending OTP:', error);
     }
-    // } catch (error) {
-    //   console.error('Error sending OTP:', error);
-    // }
   };
 
   const handleOtpSubmit = async () => {
@@ -273,6 +272,23 @@ const Home = () => {
     // Perform search functionality here
     // For example: execute search based on the entered text
   };
+
+  useEffect(() => {
+    // Replace this URL with your API endpoint
+    const apiUrl = `${base_url}/posts`;
+    console.log(apiUrl);
+    // Fetch the data from the API
+    fetch(apiUrl)
+      .then((response) => response.json())
+      .then((json) => {
+        setProductData(json); // Store the response data in state
+        setLoading(false); // Update loading state
+      })
+      .catch((error) => {
+        console.error(error);
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>

@@ -35,9 +35,9 @@ const Product = ({ product }) => {
       </View>
 
       <View style={styles.detailsContainer}>
-        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{product.name}</Text>
-        <Text style={styles.details} numberOfLines={2} ellipsizeMode="tail">{product.details}</Text>
-        <Text style={styles.price}>Price: ${product.price}</Text>
+        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{product.post_details.titile}</Text>
+        <Text style={styles.details} numberOfLines={2} ellipsizeMode="tail">{product.post_details.description}</Text>
+        <Text style={styles.price}>Price: ${product.post_details.amount}</Text>
       </View>
     </TouchableOpacity>
   );
