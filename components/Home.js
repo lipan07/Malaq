@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { View, ScrollView, StyleSheet, TouchableOpacity, Modal, Text, TextInput, Button, FlatList, Dimensions, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native';// Assuming Product.js is in the same directory
 import Icon from 'react-native-vector-icons/Ionicons'
+import { useIsFocused } from '@react-navigation/native';
 import Product from './Product'; // Assuming Product.js is in the same directory
 import CategoryMenu from './CategoryMenu';
 import BottomNavBar from './BottomNavBar';
@@ -32,6 +33,7 @@ const Home = () => {
   const [showOtpField, setShowOtpField] = useState(false);
   const [productData, setProductData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const isFocused = useIsFocused();
 
   const handlePhoneNumberSubmit = async () => {
     try {
@@ -156,23 +158,22 @@ const Home = () => {
     // For example: execute search based on the entered text
   };
 
-  useEffect(() => {
-    // Replace this URL with your API endpoint
+  const fetchData = () => {
+    setLoading(true);
     const apiUrl = `${base_url}/posts`;
-    // Fetch the data from the API
     const myHeaders = new Headers();
     myHeaders.append("Authorization", 'Bearer ' + token);
 
     const requestOptions = {
       method: "GET",
       headers: myHeaders,
-      redirect: "follow"
+      redirect: "follow",
     };
 
     fetch(apiUrl, requestOptions)
       .then((response) => response.text())
       .then((result) => {
-        let formattedData = JSON.parse(result)
+        let formattedData = JSON.parse(result);
         setProductData(formattedData.data);
         setLoading(false);
       })
@@ -180,7 +181,13 @@ const Home = () => {
         console.error(error);
         setLoading(false);
       });
-  }, []);
+  };
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchData(); // Fetch data whenever the Home screen is focused
+    }
+  }, [isFocused]);
   if (loading) {
     return (
       <View style={styles.loader}>
