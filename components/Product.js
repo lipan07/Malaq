@@ -6,7 +6,7 @@ const Product = ({ product }) => {
   const navigation = useNavigation();
 
   const handleProductPress = () => {
-    navigation.navigate('ProductDetails', { productId: product.id });
+    navigation.navigate('ProductDetails', { product });
   };
 
   const handleImagePress = (index) => {

@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-import { View, ScrollView, StyleSheet, TouchableOpacity, Modal, Text, TextInput, Button, FlatList, Dimensions, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native';// Assuming Product.js is in the same directory
-import Icon from 'react-native-vector-icons/Ionicons'
-import { useIsFocused } from '@react-navigation/native';
-import Product from './Product'; // Assuming Product.js is in the same directory
+import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Button, FlatList, Dimensions, ActivityIndicator, RefreshControl, TouchableWithoutFeedback, Keyboard, ScrollView } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Product from './Product';
 import CategoryMenu from './CategoryMenu';
 import BottomNavBar from './BottomNavBar';
 import { BASE_URL, TOKEN } from '@env';
+
 const base_url = BASE_URL;
 const token = TOKEN;
 
@@ -19,7 +19,6 @@ const Home = () => {
     { id: '1', name: 'Kolkata- Agarpara' },
     { id: '2', name: 'Kolkata- Sodepur' },
     { id: '3', name: 'Kolkata- Barrackpore' },
-    // Add more addresses as needed //
   ]);
 
   const [showAddressModal, setShowAddressModal] = useState(false);
@@ -27,13 +26,15 @@ const Home = () => {
   const newAddressRef = useRef(null);
   const [newAddress, setNewAddress] = useState('');
 
-  //Login start
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [showOtpField, setShowOtpField] = useState(false);
   const [productData, setProductData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const isFocused = useIsFocused();
+  const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true); // To track if more data is available
+
 
   const handlePhoneNumberSubmit = async () => {
     try {
@@ -158,9 +159,10 @@ const Home = () => {
     // For example: execute search based on the entered text
   };
 
-  const fetchData = () => {
+  const fetchData = async (pageNumber = 1) => {
     setLoading(true);
-    const apiUrl = `${base_url}/posts`;
+    const apiUrl = `${base_url}/posts?page=${pageNumber}`;
+    console.log(apiUrl);
     const myHeaders = new Headers();
     myHeaders.append("Authorization", 'Bearer ' + token);
 
@@ -170,76 +172,92 @@ const Home = () => {
       redirect: "follow",
     };
 
-    fetch(apiUrl, requestOptions)
-      .then((response) => response.text())
-      .then((result) => {
-        let formattedData = JSON.parse(result);
-        setProductData(formattedData.data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error(error);
-        setLoading(false);
-      });
+    try {
+      const response = await fetch(apiUrl, requestOptions);
+      const result = await response.json();
+
+      if (result.data.length > 0) {
+        setProductData(prevData => [...prevData, ...result.data]);
+        setPage(pageNumber);
+      } else {
+        setHasMore(false); // No more data available
+      }
+    } catch (error) {
+      // console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => {
-    if (isFocused) {
-      fetchData(); // Fetch data whenever the Home screen is focused
+  const onRefresh = async () => {
+    console.log('Onrefresh');
+    setRefreshing(true);
+    await setProductData([]); // Clear current data
+    setPage(1);
+    setHasMore(true); // Reset for refresh
+    await fetchData(1);
+    setRefreshing(false);
+  };
+
+  const loadMoreData = () => {
+    if (!loading && hasMore) {
+      fetchData(page + 1);
     }
-  }, [isFocused]);
-  if (loading) {
+  };
+  useEffect(() => {
+    // if (page == 1) {
+    fetchData(1);
+    // }
+  }, []);
+
+  if (loading && page === 1) {
     return (
       <View style={styles.loader}>
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
   }
+
+  // const { top } = useSafeAreaInsets();
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.container}>
         <View style={styles.localtionIcon}>
-          <TouchableOpacity onPress={handleLocationClick} style={styles.locationLink}>
+          <TouchableOpacity onPress={() => setShowAddressModal(true)} style={styles.locationLink}>
             <Icon name="location" size={20} color="#007bff" />
             <Text style={styles.locationText}>Your location is {selectedAddress || 'Kolkata'}</Text>
             <Icon name="chevron-down" size={20} color="#007bff" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleLoginClick} style={styles.userIcon}>
+          <TouchableOpacity onPress={() => setShowLogin(true)} style={styles.userIcon}>
             <Icon name="person-circle-outline" size={30} color="#007bff" />
           </TouchableOpacity>
         </View>
-        {/* Other content of Home */}
-        {/* ... */}
-        {/* Modal for login */}
-        <ScrollView>
-        </ScrollView>
+
         <View style={styles.searchBar}>
           <TextInput
             style={styles.searchInput}
             placeholder="Search..."
-          // Add onChangeText and other necessary props for search functionality
           />
-          {/* Button */}
-          <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+          <TouchableOpacity style={styles.searchButton} onPress={() => { /* Add search functionality */ }}>
             <Text style={styles.buttonText}>Search</Text>
           </TouchableOpacity>
         </View>
-        <ScrollView>
-          <CategoryMenu />
-          {productData && productData.length > 0 ? (
-            productData.map((product) => (
-              <View key={product.id}>
-                <Product product={product} />
-              </View>
-            ))
-          ) : (
-            <Text>No products found</Text>
-          )}
-        </ScrollView>
+        <CategoryMenu />
+        <FlatList
+          data={productData}
+          renderItem={({ item, index }) => <Product product={item} />}
+          // keyExtractor={(item, index) => item.id ? item.id.toString() : index.toString()}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          onEndReached={loadMoreData}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={loading && hasMore ? <ActivityIndicator size="large" color="#0000ff" /> : null}
+        />
         <BottomNavBar />
+
         <Modal visible={showLogin} transparent={true} animationType="slide">
           <View style={styles.modalContainer}>
-            <TouchableOpacity onPress={closeModal} style={styles.closeIcon}>
+            <TouchableOpacity onPress={() => setShowLogin(false)} style={styles.closeIcon}>
               <Icon name="close-circle" size={30} color="#007bff" />
             </TouchableOpacity>
             <View style={styles.modalContent}>
@@ -249,7 +267,7 @@ const Home = () => {
                   style={styles.input}
                   placeholder="Phone Number"
                   value={phoneNumber}
-                  onChangeText={(text) => setPhoneNumber(text)}
+                  onChangeText={setPhoneNumber}
                 />
               )}
               {showOtpField && (
@@ -257,7 +275,7 @@ const Home = () => {
                   style={styles.input}
                   placeholder="OTP"
                   value={otp}
-                  onChangeText={(text) => setOtp(text)}
+                  onChangeText={setOtp}
                 />
               )}
               <TouchableOpacity style={styles.resendButton} onPress={handlePhoneNumberSubmit}>
@@ -269,15 +287,15 @@ const Home = () => {
             </View>
           </View>
         </Modal>
-        {/* Modal for address selection */}
+
         <Modal visible={showAddressModal} transparent={true} animationType="slide">
           <View style={styles.addressModalContainer}>
             <View style={styles.addressModalContent}>
               <Text style={styles.addressModalTitle}>Select Address</Text>
               <FlatList
-                data={sortedAddresses}
+                data={addresses}
                 renderItem={renderAddressItem}
-                keyExtractor={(item) => item.id}
+                keyExtractor={item => item.id}
                 horizontal={true}
                 contentContainerStyle={styles.addressesContainer}
               />
@@ -286,14 +304,14 @@ const Home = () => {
                   ref={newAddressRef}
                   style={styles.newAddressTextInput}
                   placeholder="Add New Address"
-                  onChangeText={(text) => setNewAddress(text)}
+                  onChangeText={setNewAddress}
                   value={newAddress}
                 />
                 <TouchableOpacity style={styles.addButton} onPress={handleAddNewAddress}>
                   <Text style={styles.addButtonText}>Add</Text>
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity onPress={closeModal}>
+              <TouchableOpacity onPress={() => setShowAddressModal(false)}>
                 <Text style={styles.closeButton}>Close</Text>
               </TouchableOpacity>
             </View>
@@ -304,8 +322,8 @@ const Home = () => {
   );
 };
 
-
 const windowWidth = Dimensions.get('window').width;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -313,7 +331,7 @@ const styles = StyleSheet.create({
   },
   userIcon: {
     position: 'absolute',
-    top: 40,
+    // top: 40,
     right: 25,
     zIndex: 999,
   },
@@ -341,42 +359,65 @@ const styles = StyleSheet.create({
     height: 40,
     borderColor: 'gray',
     borderWidth: 1,
-    borderRadius: 5,
+    marginBottom: 15,
     paddingHorizontal: 10,
-    marginBottom: 10,
   },
   submitButton: {
     backgroundColor: '#007bff',
     padding: 10,
     borderRadius: 5,
-  },
-  closeButton: {
     marginTop: 10,
-    color: 'blue',
   },
-  locationIcon: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
+  resendButton: {
+    backgroundColor: '#007bff',
     padding: 10,
     borderRadius: 5,
-    marginBottom: 20,
+    marginTop: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  closeIcon: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  localtionIcon: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 15,
+    top: 20,
+    alignItems: 'center',
   },
   locationLink: {
     flexDirection: 'row',
     alignItems: 'center',
-    top: 50,
-    paddingBottom: 10,
-    left: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
   },
   locationText: {
-    fontSize: 14,
-    color: '#007bff',
+    fontSize: 16,
+    marginLeft: 5,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    paddingHorizontal: 15,
+    marginVertical: 10,
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  searchButton: {
+    backgroundColor: '#007bff',
+    justifyContent: 'center',
+    paddingHorizontal: 15,
+    borderRadius: 5,
     marginLeft: 10,
-    marginRight: 10,
   },
   addressModalContainer: {
     flex: 1,
@@ -386,98 +427,44 @@ const styles = StyleSheet.create({
   },
   addressModalContent: {
     backgroundColor: '#fff',
-    width: windowWidth - 40, // Adjusting width to be the screen width minus padding
     padding: 20,
     borderRadius: 10,
-    alignItems: 'center',
+    width: '80%',
   },
   addressModalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
   },
   addressesContainer: {
-    alignItems: 'flex-start',
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  addressCard: {
-    backgroundColor: '#eaeaea',
-    borderRadius: 10,
-    padding: 10,
-    marginRight: 1,
+    paddingBottom: 20,
   },
   newAddressInput: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
+    marginTop: 10,
   },
   newAddressTextInput: {
     flex: 1,
+    height: 40,
+    borderColor: 'gray',
     borderWidth: 1,
-    borderColor: '#ccc',
+    paddingHorizontal: 10,
     borderRadius: 5,
-    padding: 8,
-    marginRight: 10,
   },
   addButton: {
     backgroundColor: '#007bff',
+    padding: 10,
     borderRadius: 5,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
+    marginLeft: 10,
   },
   addButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontSize: 16,
   },
-  addressItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  deleteButton: {
-    marginLeft: 1,
-    marginRight: 10,
-  },
-  topBar: {
-    // Styles for your top navigation bar
-    // For example: backgroundColor, height, padding, flexDirection
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 10,
-    marginTop: 50,
-    borderBottomWidth: 1,
-    borderBottomColor: '#CCCCCC',
-    // Adjust styles for the search bar container
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#CCCCCC',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    marginRight: 10,
-    // Other input styles
-  },
-  searchButton: {
-    backgroundColor: 'blue', // Add your desired button styles
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-  },
-  buttonText: {
-    color: 'white',
-  },
-  resendButton: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 5,
+  closeButton: {
     marginTop: 10,
-    marginBottom: 10,
+    color: '#007bff',
+    textAlign: 'center',
   },
   loader: {
     flex: 1,
@@ -487,4 +474,3 @@ const styles = StyleSheet.create({
 });
 
 export default Home;
-
