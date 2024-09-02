@@ -1,135 +1,71 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import BottomNavBar from './BottomNavBar';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
+import ParentCategoryPanel from './ParentCategoryPanel';
+import SubCategoryPanel from './SubCategoryPanel';
+import { useNavigation } from '@react-navigation/native';
+import { BASE_URL, TOKEN } from '@env';
 
-const ProductAddPage = ({ navigation }) => {
-  const [productName, setProductName] = useState('');
-  const [productDescription, setProductDescription] = useState('');
-  const [productPrice, setProductPrice] = useState('');
-  const [productImage, setProductImage] = useState('');
+const base_url = BASE_URL;
+const token = TOKEN;
 
-  const handleAddProduct = () => {
-    // Logic to add the product to the database or perform actions
-    // based on the filled product details
-    console.log('Adding product:', {
-      productName,
-      productDescription,
-      productPrice,
-      productImage,
-    });
+const ProductAddPage = () => {
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [subcategories, setSubcategories] = useState([]);
+  const navigation = useNavigation();
 
-    // Clear form fields after adding the product
-    setProductName('');
-    setProductDescription('');
-    setProductPrice('');
-    setProductImage('');
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const apiUrl = `${base_url}/category`;
+      console.log(apiUrl);
+      const myHeaders = new Headers();
+      myHeaders.append("Authorization", 'Bearer ' + token);
+
+      const requestOptions = {
+        method: "GET",
+        headers: myHeaders,
+        redirect: "follow",
+      };
+      try {
+        const response = await fetch(apiUrl, requestOptions);  // Replace with your actual API endpoint
+        const data = await response.json();
+        setCategories(data.categories);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const handleCategorySelect = (category) => {
+    setSelectedCategory(category);
+    if (category.children.length > 0) {
+      setSubcategories(category.children);
+    } else {
+      // No subcategories, navigate directly to product form
+      navigation.navigate('ProductFormPage', { category, subcategory: null });
+    }
   };
+
+  const handleSubcategorySelect = (subcategory) => {
+    navigation.navigate('ProductFormPage', { category: selectedCategory, subcategory });
+  };
+
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollContainer}>
-        {/* Your form fields for adding a product */}
-        <View style={styles.formContent}>
-          <Text style={styles.header}>Add Product</Text>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Product Name:</Text>
-            <TextInput
-              style={styles.input}
-              value={productName}
-              onChangeText={setProductName}
-              placeholder="Enter product name"
-            />
-          </View>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Description:</Text>
-            <TextInput
-              style={styles.input}
-              value={productDescription}
-              onChangeText={setProductDescription}
-              placeholder="Enter product description"
-              multiline={true}
-              numberOfLines={4}
-            />
-          </View>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Price:</Text>
-            <TextInput
-              style={styles.input}
-              value={productPrice}
-              onChangeText={setProductPrice}
-              placeholder="Enter product price"
-              keyboardType="numeric"
-            />
-          </View>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Image URL:</Text>
-            <TextInput
-              style={styles.input}
-              value={productImage}
-              onChangeText={setProductImage}
-              placeholder="Enter image URL"
-            />
-          </View>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Image URL:</Text>
-            <TextInput
-              style={styles.input}
-              value={productImage}
-              onChangeText={setProductImage}
-              placeholder="Enter image URL"
-            />
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Bottom Navigation Bar */}
-      <BottomNavBar navigation={navigation} />
+      <ParentCategoryPanel categories={categories} onSelectCategory={handleCategorySelect} />
+      {selectedCategory && selectedCategory.children.length > 0 && (
+        <SubCategoryPanel subcategories={subcategories} onSelectSubcategory={handleSubcategorySelect} />
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollContainer: {
-    flex: 1,
-    marginBottom: 60, // Adjust based on bottom navigation bar height
-  },
-  formContent: {
-    padding: 20,
-  },
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  inputContainer: {
-    marginBottom: 15,
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 5,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-  },
-  addButton: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom:50,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    flexDirection: 'row',
   },
 });
 

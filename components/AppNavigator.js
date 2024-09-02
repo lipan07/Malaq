@@ -15,6 +15,7 @@ import PackagePage from './PackagePage';
 import Settings from './Settings';
 import ImageViewer from './ImageViewer';
 import CompanyDetailsPage from './CompanyDetailsPage';
+import ProductForm from './ProductForm';
 
 const Stack = createStackNavigator();
 
@@ -25,7 +26,9 @@ const AppNavigator = () => {
       <Stack.Screen name="ProductDetails" component={ProductDetails} />
       <Stack.Screen name="ImageViewer" component={ImageViewer} />
       <Stack.Screen name="ChatBox" component={ChatBox} />
+      {/* <Stack.Screen name="ProductAddPage" component={ProductAddPage} /> */}
       <Stack.Screen name="ProductAddPage" component={ProductAddPage} />
+      <Stack.Screen name="ProductFormPage" component={ProductForm} />
       <Stack.Screen name="ChatList" component={ChatList} />
       <Stack.Screen name="MyAdsPage" component={MyAdsPage} />
       <Stack.Screen name="Profile" component={Profile} />
