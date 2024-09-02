@@ -7,11 +7,14 @@ import Product from './Product';
 import CategoryMenu from './CategoryMenu';
 import BottomNavBar from './BottomNavBar';
 import { BASE_URL, TOKEN } from '@env';
+import Profile from './Profile';
+import { useNavigation } from '@react-navigation/native';
 
 const base_url = BASE_URL;
 const token = TOKEN;
 
 const Home = () => {
+  const navigation = useNavigation();
   const [showLogin, setShowLogin] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,89 +37,16 @@ const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true); // To track if more data is available
+  const [showProfile, setShowProfile] = useState(false);
 
+  const handleUserIconClick = () => {
 
-  const handlePhoneNumberSubmit = async () => {
-    try {
-      // Make an API request to send OTP to the provided phone number
-      const response = await fetch(`${base_url}/send-sms`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          phoneNumber: phoneNumber
-        }),
-      });
-
-      console.log(response);
-      if (response.ok) {
-        // OTP sent successfully
-        setShowOtpField(true); // Show the OTP input field
-
-        console.log('Success');
-      } else {
-        // Handle errors, maybe display an error message to the user
-        console.error('Failed to send OTP');
-
-        setShowOtpField(true); // Show the OTP input field
-      }
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-    }
-  };
-
-  const handleOtpSubmit = async () => {
-    try {
-      // Make an API request to verify the OTP
-      const response = await fetch(`${base_url}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          phoneNumber: phoneNumber,
-          password: otp,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const token = data.token; // Assuming the token is returned in the response
-
-        // Store the token in AsyncStorage
-        await AsyncStorage.setItem('authToken', token);
-
-        // OTP verification successful, proceed with login
-        console.log('OTP verification successful');
-        // You can add logic here to handle successful login
-        // For example, you can store the user's authentication token in AsyncStorage
-      } else {
-        // Handle OTP verification failure, maybe display an error message to the user
-        console.error('OTP verification failed');
-      }
-    } catch (error) {
-      console.error('Error verifying OTP:', error);
-    }
-  };
-
-
-  //Login end
-  const handleLoginClick = () => {
-    setShowLogin(true);
+    // navigation.navigate('Profile');
+    navigation.navigate('Login');
   };
 
   const closeModal = () => {
-    setShowLogin(false);
     setShowAddressModal(false);
-  };
-
-  const handleLogin = () => {
-    // Add your login logic here
-    console.log('Login with:', email, password);
-    // For example, you can authenticate the user here
-    // For simplicity, I'm just closing the modal
-    closeModal();
   };
 
   const handleLocationClick = () => {
@@ -229,7 +159,7 @@ const Home = () => {
             <Text style={styles.locationText}>Your location is {selectedAddress || 'Kolkata'}</Text>
             <Icon name="chevron-down" size={20} color="#007bff" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setShowLogin(true)} style={styles.userIcon}>
+          <TouchableOpacity onPress={handleUserIconClick} style={styles.userIcon}>
             <Icon name="person-circle-outline" size={30} color="#007bff" />
           </TouchableOpacity>
         </View>
@@ -254,39 +184,6 @@ const Home = () => {
           ListFooterComponent={loading && hasMore ? <ActivityIndicator size="large" color="#0000ff" /> : null}
         />
         <BottomNavBar />
-
-        <Modal visible={showLogin} transparent={true} animationType="slide">
-          <View style={styles.modalContainer}>
-            <TouchableOpacity onPress={() => setShowLogin(false)} style={styles.closeIcon}>
-              <Icon name="close-circle" size={30} color="#007bff" />
-            </TouchableOpacity>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>{showOtpField ? 'Enter OTP' : 'Enter Phone Number'}</Text>
-              {!showOtpField && (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Phone Number"
-                  value={phoneNumber}
-                  onChangeText={setPhoneNumber}
-                />
-              )}
-              {showOtpField && (
-                <TextInput
-                  style={styles.input}
-                  placeholder="OTP"
-                  value={otp}
-                  onChangeText={setOtp}
-                />
-              )}
-              <TouchableOpacity style={styles.resendButton} onPress={handlePhoneNumberSubmit}>
-                <Text style={styles.buttonText}>Resend OTP</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.submitButton} onPress={showOtpField ? handleOtpSubmit : handlePhoneNumberSubmit}>
-                <Text style={styles.buttonText}>{!showOtpField ? 'Send OTP' : 'Login or Signup'}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
 
         <Modal visible={showAddressModal} transparent={true} animationType="slide">
           <View style={styles.addressModalContainer}>

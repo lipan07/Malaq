@@ -7,6 +7,8 @@ import ChatBox from './ChatBox';
 import ChatList from './ChatList';
 import MyAdsPage from './MyAdsPage';
 import AccountPage from './AccountPage';
+import Profile from './Profile';
+import Login from './Login';
 import EditProfilePage from './EditProfilePage';
 import MyNetwork from './MyNetwork';
 import PackagePage from './PackagePage';
@@ -26,6 +28,8 @@ const AppNavigator = () => {
       <Stack.Screen name="ProductAddPage" component={ProductAddPage} />
       <Stack.Screen name="ChatList" component={ChatList} />
       <Stack.Screen name="MyAdsPage" component={MyAdsPage} />
+      <Stack.Screen name="Profile" component={Profile} />
+      <Stack.Screen name="Login" component={Login} />
       <Stack.Screen name="EditProfilePage" component={EditProfilePage} />
       <Stack.Screen name="AccountPage" component={AccountPage} />
       <Stack.Screen name="MyNetwork" component={MyNetwork} />
