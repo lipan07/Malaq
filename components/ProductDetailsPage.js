@@ -1,36 +1,10 @@
 import React from 'react';
 import { View, ScrollView, Text, Image, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import MapView, { Marker } from 'react-native-maps';
 import BottomNavBar from './BottomNavBar';
 const ProductDetails = ({ route }) => {
-    // Access the productId passed from the Product component
-    const { productId } = route.params;
-    // Assuming you have a function to fetch product details based on productId
-    // Replace this with your actual data-fetching logic
-    const getProductDetails = (id) => {
-        // Here, fetch details of the product using the productId
-        // Return the details or mock data for demonstration
-        return {
-            id: id,
-            name: 'Product Name',
-            description: 'Product Description',
-            price: 99.99,
-            phoneNumber: 8961181854,
-            location: {
-                latitude: 37.774929,
-                longitude: -122.419418
-            },
-            images: [
-                'https://5.imimg.com/data5/SELLER/Default/2023/5/306160939/BW/BZ/WU/116672918/apple-macbook-air-500x500.PNG',
-                'https://inventstore.in/wp-content/uploads/2023/05/macbook-pro-13-silver.png',
-                'https://images.news18.com/ibnlive/uploads/2023/10/macbook-air-m1-2023-10-c3ced763eda4931bd195f9e7ff255169.jpg',
-            ],
-            // Add more details as needed
-        };
-    };
-
-    // Fetch the product details based on the productId
-    const product = getProductDetails(productId);
+    const { product } = route.params;
     const navigation = useNavigation();
 
     const handleImagePress = (imageIndex) => {
@@ -64,23 +38,29 @@ const ProductDetails = ({ route }) => {
                 {/* Product details */}
                 <View style={styles.detailsContainer}>
                     <Text style={styles.companyName} onPress={handleCompanyNamePress}>
-                        Company Name
+                        Company Name: Big-Brain
                     </Text>
-                    <Text style={styles.name}>{product.name}</Text>
-                    <Text style={styles.description}>{product.description}</Text>
-                    <Text style={styles.price}>Price: ${product.price}</Text>
+                    <Text style={styles.name}>{product.post_details.title}</Text>
+                    <Text style={styles.description}>{product.post_details.description}</Text>
+                    <Text style={styles.price}>Price: ${product.post_details.amount}</Text>
                 </View>
 
                 {/* Product location map */}
                 <View style={styles.mapContainer}>
-                    {/* <MapView
+                    <MapView
+                        style={styles.map}
                         initialRegion={{
-                            latitude: 37.78825,
-                            longitude: -122.4324,
-                            latitudeDelta: 0.0922,
-                            longitudeDelta: 0.0421,
-                        }}
-                    /> */}
+                            latitude: 22.5726,
+                            longitude: 88.3639,
+                            latitudeDelta: 0.05,
+                            longitudeDelta: 0.05,
+                        }}>
+                        <Marker
+                            coordinate={{ latitude: 22.5726, longitude: 88.3639 }}
+                            title={"Big-Brain HQ"}
+                            description={"This is Big-Brain Head-Quarters"}
+                        />
+                    </MapView>
                 </View>
             </ScrollView>
 
@@ -144,6 +124,9 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         borderRadius: 10,
         overflow: 'hidden',
+    },
+    map: {
+        ...StyleSheet.absoluteFillObject,
     },
     map: {
         flex: 1,
