@@ -13,6 +13,8 @@ const MyAdsPage = ({ navigation }) => {
 
   const fetchProducts = async (page) => {
     setIsLoading(true);
+
+    const apiUrl = `${base_url}/my-post?page=${page}`;
     console.log(apiUrl);
     const myHeaders = new Headers();
     myHeaders.append("Authorization", 'Bearer ' + token);
@@ -23,7 +25,7 @@ const MyAdsPage = ({ navigation }) => {
       redirect: "follow",
     };
     try {
-      const response = await fetch(`${base_url}/my-post?page=${page}`, requestOptions);
+      const response = await fetch(apiUrl, requestOptions);
       const jsonResponse = await response.json();
       setProducts(jsonResponse.data);
       setCurrentPage(page);
