@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import BottomNavBar from './BottomNavBar';
+import { BASE_URL, TOKEN } from '@env';
+
+const base_url = BASE_URL;
+const token = TOKEN;
 
 const MyAdsPage = ({ navigation }) => {
   const [products, setProducts] = useState([]);
@@ -9,8 +13,17 @@ const MyAdsPage = ({ navigation }) => {
 
   const fetchProducts = async (page) => {
     setIsLoading(true);
+    console.log(apiUrl);
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", 'Bearer ' + token);
+
+    const requestOptions = {
+      method: "GET",
+      headers: myHeaders,
+      redirect: "follow",
+    };
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/my-post?page=${page}`);
+      const response = await fetch(`${base_url}/my-post?page=${page}`, requestOptions);
       const jsonResponse = await response.json();
       setProducts(jsonResponse.data);
       setCurrentPage(page);
