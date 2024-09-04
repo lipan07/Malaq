@@ -11,11 +11,10 @@ const MyAdsPage = ({ navigation }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchProducts = async (page) => {
+  const fetchProducts = async (page, reset = false) => {
     setIsLoading(true);
 
     const apiUrl = `${base_url}/my-post?page=${page}`;
-    console.log(apiUrl);
     const myHeaders = new Headers();
     myHeaders.append("Authorization", 'Bearer ' + token);
 
@@ -24,10 +23,19 @@ const MyAdsPage = ({ navigation }) => {
       headers: myHeaders,
       redirect: "follow",
     };
+
     try {
       const response = await fetch(apiUrl, requestOptions);
       const jsonResponse = await response.json();
-      setProducts(jsonResponse.data);
+
+      if (reset) {
+        // If resetting, replace the current product list with the first page data
+        setProducts(jsonResponse.data);
+      } else {
+        // Otherwise, append new products to the existing list
+        setProducts(prevProducts => [...prevProducts, ...jsonResponse.data]);
+      }
+
       setCurrentPage(page);
     } catch (error) {
       console.error("Failed to load products", error);
@@ -42,13 +50,14 @@ const MyAdsPage = ({ navigation }) => {
 
   const handleScrollEndReached = () => {
     if (!isLoading) {
-      fetchProducts(currentPage + 1);
+      fetchProducts(currentPage + 1);  // Append new data to the list when scrolling down
     }
   };
 
   const handleScrollTopReached = () => {
-    if (currentPage > 1 && !isLoading) {
-      fetchProducts(currentPage - 1);
+    if (!isLoading && currentPage > 1) {
+      fetchProducts(1, true);  // Reset the list and load the first page when scrolling to the top
+      setCurrentPage(1);       // Reset the current page to 1
     }
   };
 
@@ -74,7 +83,7 @@ const MyAdsPage = ({ navigation }) => {
         onEndReachedThreshold={0.1}
         onScroll={({ nativeEvent }) => {
           if (nativeEvent.contentOffset.y === 0) {
-            handleScrollTopReached();
+            handleScrollTopReached();  // Refresh and load page 1 when scrolling to the top
           }
         }}
       />
