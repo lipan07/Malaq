@@ -1,32 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import BottomNavBar from './BottomNavBar';
+import { BASE_URL, TOKEN } from '@env';
 
-// Example product data (replace this with your actual product data)
-const productData = [
-  { id: '1', name: 'Product 1', imageUrl: 'https://images.unsplash.com/photo-1515248137880-45e105b710e0?q=80&w=2988&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
-  { id: '2', name: 'Product 2', imageUrl: 'https://media.assettype.com/evoindia%2Fimport%2F2016%2F02%2FJaguar-XE-27022016-M.jpg' },
-  { id: '3', name: 'Product 3', imageUrl: 'https://media.assettype.com/evoindia%2Fimport%2F2016%2F02%2FJaguar-XE-27022016-M.jpg' },
-  { id: '4', name: 'Product 4', imageUrl: 'https://media.assettype.com/evoindia%2Fimport%2F2016%2F02%2FJaguar-XE-27022016-M.jpg' },
-  { id: '5', name: 'Product 5', imageUrl: 'https://media.assettype.com/evoindia%2Fimport%2F2016%2F02%2FJaguar-XE-27022016-M.jpg' },
-  // More product items...
-];
+const base_url = BASE_URL;
+const token = TOKEN;
 
 const MyAdsPage = ({ navigation }) => {
   const [products, setProducts] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchProducts = async (page) => {
+    setIsLoading(true);
+
+    const apiUrl = `${base_url}/my-post?page=${page}`;
+    console.log(apiUrl);
+    const myHeaders = new Headers();
+    myHeaders.append("Authorization", 'Bearer ' + token);
+
+    const requestOptions = {
+      method: "GET",
+      headers: myHeaders,
+      redirect: "follow",
+    };
+    try {
+      const response = await fetch(apiUrl, requestOptions);
+      const jsonResponse = await response.json();
+      setProducts(jsonResponse.data);
+      setCurrentPage(page);
+    } catch (error) {
+      console.error("Failed to load products", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Fetch or set your product data here
-    setProducts(productData); // For example, setting product data from state
+    fetchProducts(currentPage);
   }, []);
+
+  const handleScrollEndReached = () => {
+    if (!isLoading) {
+      fetchProducts(currentPage + 1);
+    }
+  };
+
+  const handleScrollTopReached = () => {
+    if (currentPage > 1 && !isLoading) {
+      fetchProducts(currentPage - 1);
+    }
+  };
 
   const renderProductItem = ({ item }) => (
     <TouchableOpacity
       style={styles.productItem}
       onPress={() => navigation.navigate('ProductDetails', { productId: item.id })}
     >
-      <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
-      <Text style={styles.productName}>{item.name}</Text>
+      <Image source={{ uri: item.images[0] }} style={styles.productImage} />
+      <Text style={styles.productName}>{item.post_details.title}</Text>
     </TouchableOpacity>
   );
 
@@ -38,6 +70,13 @@ const MyAdsPage = ({ navigation }) => {
         keyExtractor={(item) => item.id}
         numColumns={2}
         contentContainerStyle={styles.productList}
+        onEndReached={handleScrollEndReached}
+        onEndReachedThreshold={0.1}
+        onScroll={({ nativeEvent }) => {
+          if (nativeEvent.contentOffset.y === 0) {
+            handleScrollTopReached();
+          }
+        }}
       />
       <BottomNavBar navigation={navigation} />
     </View>
@@ -52,7 +91,7 @@ const styles = StyleSheet.create({
   },
   productList: {
     paddingHorizontal: 5,
-    paddingBottom: 60, // Adjusted to accommodate BottomNavBar
+    paddingBottom: 60,
   },
   productItem: {
     flex: 1,
@@ -62,10 +101,10 @@ const styles = StyleSheet.create({
     borderColor: '#CCCCCC',
     padding: 10,
     alignItems: 'center',
-    backgroundColor: '#F9F9F9', // Changed background color for clarity
+    backgroundColor: '#F9F9F9',
   },
   productImage: {
-    width: '100%', // Utilizing full width of the container
+    width: '100%',
     height: 120,
     resizeMode: 'cover',
     marginBottom: 8,
