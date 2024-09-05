@@ -63,7 +63,7 @@ const MyAdsPage = ({ navigation }) => {
   const renderProductItem = ({ item }) => (
     <TouchableOpacity
       style={styles.productItem}
-      onPress={() => navigation.navigate('ProductDetails', { productId: item.id })}
+      onPress={() => navigation.navigate('ProductDetails', { product: item })}
     >
       <View style={styles.imageContainer}>
         <Swiper
@@ -82,6 +82,8 @@ const MyAdsPage = ({ navigation }) => {
         </Swiper>
       </View>
       <Text style={styles.productName}>{item.post_details.title}</Text>
+      <Text style={styles.details} numberOfLines={2} ellipsizeMode="tail">{item.post_details.description}</Text>
+      <Text style={styles.price}>Price: ${item.post_details.amount}</Text>
     </TouchableOpacity>
   );
 
@@ -144,6 +146,16 @@ const styles = StyleSheet.create({
   productName: {
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  details: {
+    fontSize: 16,
+    marginTop: 5,
+    marginBottom: 10,
+  },
+  price: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'green',
   },
 });
 

@@ -1,373 +1,204 @@
 import React, { useState, useRef, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Button, FlatList, Dimensions, ActivityIndicator, RefreshControl, TouchableWithoutFeedback, Keyboard, ScrollView } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Product from './Product';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Image, TextInput, FlatList, ActivityIndicator } from 'react-native';
+import Swiper from 'react-native-swiper';
 import CategoryMenu from './CategoryMenu';
 import BottomNavBar from './BottomNavBar';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { BASE_URL, TOKEN } from '@env';
-import Profile from './Profile';
-import { useNavigation } from '@react-navigation/native';
 
-const base_url = BASE_URL;
-const token = TOKEN;
-
-const Home = () => {
-  const navigation = useNavigation();
-  const [showLogin, setShowLogin] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const Home = ({ navigation }) => {
+  const [products, setProducts] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true); // Track if more data is available
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState('Kolkata');
+  const [newAddress, setNewAddress] = useState('');
   const [addresses, setAddresses] = useState([
     { id: '1', name: 'Kolkata- Agarpara' },
     { id: '2', name: 'Kolkata- Sodepur' },
     { id: '3', name: 'Kolkata- Barrackpore' },
   ]);
 
-  const [showAddressModal, setShowAddressModal] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState('');
-  const newAddressRef = useRef(null);
-  const [newAddress, setNewAddress] = useState('');
-
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
-  const [showOtpField, setShowOtpField] = useState(false);
-  const [productData, setProductData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true); // To track if more data is available
-  const [showProfile, setShowProfile] = useState(false);
-
-  const handleUserIconClick = () => {
-
-    // navigation.navigate('Profile');
-    navigation.navigate('Login');
-  };
-
-  const closeModal = () => {
-    setShowAddressModal(false);
-  };
-
-  const handleLocationClick = () => {
-    setShowAddressModal(true);
-  };
-
-  const handleAddressSelection = (address) => {
-    setSelectedAddress(address.name);
-    setShowAddressModal(false);
-  };
-  const handleDeleteAddress = (id) => {
-    const updatedAddresses = addresses.filter((addr) => addr.id !== id);
-    setAddresses(updatedAddresses);
-  };
-  const sortedAddresses = [...addresses].sort((a, b) => parseInt(b.id) - parseInt(a.id));
-  const renderAddressItem = ({ item }) => (
-    <View style={styles.addressItem}>
-      <TouchableOpacity style={styles.addressCard} onPress={() => handleAddressSelection(item)}>
-        <Text>{item.name}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => handleDeleteAddress(item.id)} style={styles.deleteButton}>
-        <Icon name="close-circle-outline" size={20} color="red" />
-      </TouchableOpacity>
-    </View>
-  );
-
-  const handleAddNewAddress = () => {
-    if (newAddress.trim() !== '') {
-      const newId = String(addresses.length + 1);
-      const newAddr = { id: newId, name: newAddress };
-      setAddresses([...addresses, newAddr]);
-      setNewAddress('');
-      if (newAddressRef.current) {
-        newAddressRef.current.clear();
-      }
-    }
-  };
-  const handleSearch = () => {
-    // Perform search functionality here
-    // For example: execute search based on the entered text
-  };
-
-  const fetchData = async (pageNumber = 1) => {
-    setLoading(true);
-    const apiUrl = `${base_url}/posts?page=${pageNumber}`;
-    console.log(apiUrl);
-    const myHeaders = new Headers();
-    myHeaders.append("Authorization", 'Bearer ' + token);
-
+  const fetchProducts = async (page, reset = false) => {
+    setIsLoading(true);
+    const apiUrl = `${BASE_URL}/my-post?page=${page}`;
     const requestOptions = {
       method: "GET",
-      headers: myHeaders,
-      redirect: "follow",
+      headers: { "Authorization": `Bearer ${TOKEN}` },
     };
 
     try {
       const response = await fetch(apiUrl, requestOptions);
-      const result = await response.json();
-
-      if (result.data.length > 0) {
-        setProductData(prevData => [...prevData, ...result.data]);
-        setPage(pageNumber);
+      const jsonResponse = await response.json();
+      if (reset) {
+        setProducts(jsonResponse.data);
       } else {
-        setHasMore(false); // No more data available
+        setProducts(prevProducts => [...prevProducts, ...jsonResponse.data]);
       }
+      setCurrentPage(page);
+      setHasMore(jsonResponse.data.length > 0); // Update hasMore based on response
     } catch (error) {
-      // console.error(error);
+      console.error("Failed to load products", error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const onRefresh = async () => {
-    console.log('Onrefresh');
-    setRefreshing(true);
-    await setProductData([]); // Clear current data
-    setPage(1);
-    setHasMore(true); // Reset for refresh
-    await fetchData(1);
-    setRefreshing(false);
-  };
-
-  const loadMoreData = () => {
-    if (!loading && hasMore) {
-      fetchData(page + 1);
-    }
-  };
   useEffect(() => {
-    // if (page == 1) {
-    fetchData(1);
-    // }
+    fetchProducts(currentPage);
   }, []);
 
-  if (loading && page === 1) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
+  const handleScrollEndReached = () => {
+    if (!isLoading && hasMore) {
+      fetchProducts(currentPage + 1);
+    }
+  };
 
-  // const { top } = useSafeAreaInsets();
+  const handleScrollTopReached = () => {
+    if (!isLoading && currentPage > 1) {
+      fetchProducts(1, true);
+      setCurrentPage(1);
+    }
+  };
+
+  const renderProductItem = ({ item }) => (
+    <TouchableOpacity style={styles.productItem} onPress={() => navigation.navigate('ProductDetails', { product: item })}>
+      <View style={styles.imageContainer}>
+        <Swiper style={styles.swiper} showsPagination autoplay autoplayTimeout={3}>
+          {item.images.map((imageUri, index) => (
+            <Image key={index} source={{ uri: imageUri }} style={styles.productImage} />
+          ))}
+        </Swiper>
+      </View>
+      <Text style={styles.productName}>{item.post_details.title}</Text>
+      <Text style={styles.details} numberOfLines={2} ellipsizeMode="tail">{item.post_details.description}</Text>
+      <Text style={styles.price}>Price: ${item.post_details.amount}</Text>
+    </TouchableOpacity>
+  );
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.container}>
-        <View style={styles.localtionIcon}>
-          <TouchableOpacity onPress={() => setShowAddressModal(true)} style={styles.locationLink}>
-            <Icon name="location" size={20} color="#007bff" />
-            <Text style={styles.locationText}>Your location is {selectedAddress || 'Kolkata'}</Text>
-            <Icon name="chevron-down" size={20} color="#007bff" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleUserIconClick} style={styles.userIcon}>
-            <Icon name="person-circle-outline" size={30} color="#007bff" />
-          </TouchableOpacity>
-        </View>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => setShowAddressModal(true)} style={styles.locationLink}>
+          <Icon name="location" size={20} color="#007bff" />
+          <Text style={styles.locationText}>Your location is {selectedAddress}</Text>
+          <Icon name="chevron-down" size={20} color="#007bff" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.userIcon}>
+          <Icon name="person-circle-outline" size={30} color="#007bff" />
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.searchBar}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search..."
-          />
-          <TouchableOpacity style={styles.searchButton} onPress={() => { /* Add search functionality */ }}>
-            <Text style={styles.buttonText}>Search</Text>
-          </TouchableOpacity>
-        </View>
-        <CategoryMenu />
-        <FlatList
-          data={productData}
-          renderItem={({ item, index }) => <Product product={item} />}
-          // keyExtractor={(item, index) => item.id ? item.id.toString() : index.toString()}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          onEndReached={loadMoreData}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={loading && hasMore ? <ActivityIndicator size="large" color="#0000ff" /> : null}
-        />
-        <BottomNavBar />
+      <View style={styles.searchBar}>
+        <TextInput style={styles.searchInput} placeholder="Search..." />
+        <TouchableOpacity style={styles.searchButton}>
+          <Text style={styles.buttonText}>Search</Text>
+        </TouchableOpacity>
+      </View>
 
-        <Modal visible={showAddressModal} transparent={true} animationType="slide">
-          <View style={styles.addressModalContainer}>
-            <View style={styles.addressModalContent}>
-              <Text style={styles.addressModalTitle}>Select Address</Text>
-              <FlatList
-                data={addresses}
-                renderItem={renderAddressItem}
-                keyExtractor={item => item.id}
-                horizontal={true}
-                contentContainerStyle={styles.addressesContainer}
+      <CategoryMenu />
+
+      {isLoading && products.length === 0 && <ActivityIndicator size="large" color="#007bff" style={styles.loaderTop} />}
+
+      <FlatList
+        data={products}
+        renderItem={renderProductItem}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        contentContainerStyle={styles.productList}
+        onEndReached={handleScrollEndReached}
+        onEndReachedThreshold={0.1}
+        onScroll={({ nativeEvent }) => {
+          if (nativeEvent.contentOffset.y === 0) {
+            handleScrollTopReached();
+          }
+        }}
+        ListFooterComponent={
+          products.length > 0 ? (isLoading && hasMore ? <ActivityIndicator size="large" color="#007bff" style={styles.loaderBottom} /> : null) : <Text style={styles.noProductsText}>No products found</Text>
+        }
+      />
+
+      <BottomNavBar navigation={navigation} />
+
+      <Modal visible={showAddressModal} transparent={true} animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Address</Text>
+            <FlatList
+              data={addresses}
+              renderItem={({ item }) => (
+                <View style={styles.addressItem}>
+                  <TouchableOpacity style={styles.addressCard} onPress={() => {
+                    setSelectedAddress(item.name);
+                    setShowAddressModal(false);
+                  }}>
+                    <Text>{item.name}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              keyExtractor={(item) => item.id}
+              horizontal={true}
+              contentContainerStyle={styles.addressesContainer}
+            />
+            <View style={styles.newAddressInput}>
+              <TextInput
+                style={styles.newAddressTextInput}
+                placeholder="Add New Address"
+                onChangeText={setNewAddress}
+                value={newAddress}
               />
-              <View style={styles.newAddressInput}>
-                <TextInput
-                  ref={newAddressRef}
-                  style={styles.newAddressTextInput}
-                  placeholder="Add New Address"
-                  onChangeText={setNewAddress}
-                  value={newAddress}
-                />
-                <TouchableOpacity style={styles.addButton} onPress={handleAddNewAddress}>
-                  <Text style={styles.addButtonText}>Add</Text>
-                </TouchableOpacity>
-              </View>
-              <TouchableOpacity onPress={() => setShowAddressModal(false)}>
-                <Text style={styles.closeButton}>Close</Text>
+              <TouchableOpacity style={styles.addButton} onPress={() => {
+                if (newAddress.trim()) {
+                  setAddresses([...addresses, { id: String(addresses.length + 1), name: newAddress }]);
+                  setNewAddress('');
+                }
+              }}>
+                <Text style={styles.addButtonText}>Add</Text>
               </TouchableOpacity>
             </View>
+            <TouchableOpacity onPress={() => setShowAddressModal(false)}>
+              <Text style={styles.closeButton}>Close</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
-      </View>
-    </TouchableWithoutFeedback>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
-const windowWidth = Dimensions.get('window').width;
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  userIcon: {
-    position: 'absolute',
-    // top: 40,
-    right: 25,
-    zIndex: 999,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    width: '80%',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  input: {
-    width: '100%',
-    minWidth: 300,
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 15,
-    paddingHorizontal: 10,
-  },
-  submitButton: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  resendButton: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  closeIcon: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-  },
-  localtionIcon: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 15,
-    top: 20,
-    alignItems: 'center',
-  },
-  locationLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  locationText: {
-    fontSize: 16,
-    marginLeft: 5,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    paddingHorizontal: 15,
-    marginVertical: 10,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-  },
-  searchButton: {
-    backgroundColor: '#007bff',
-    justifyContent: 'center',
-    paddingHorizontal: 15,
-    borderRadius: 5,
-    marginLeft: 10,
-  },
-  addressModalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  addressModalContent: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
-  },
-  addressModalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  addressesContainer: {
-    paddingBottom: 20,
-  },
-  newAddressInput: {
-    flexDirection: 'row',
-    marginTop: 10,
-  },
-  newAddressTextInput: {
-    flex: 1,
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-  },
-  addButton: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 5,
-    marginLeft: 10,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  closeButton: {
-    marginTop: 10,
-    color: '#007bff',
-    textAlign: 'center',
-  },
-  loader: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  container: { flex: 1, backgroundColor: '#FFFFFF', padding: 10 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 },
+  locationLink: { flexDirection: 'row', alignItems: 'center' },
+  locationText: { fontSize: 16, marginLeft: 5 },
+  userIcon: { right: 25 },
+  searchBar: { flexDirection: 'row', paddingHorizontal: 5, marginVertical: 5 },
+  searchInput: { flex: 1, height: 40, borderColor: 'gray', borderWidth: 1, paddingHorizontal: 10, borderRadius: 5 },
+  searchButton: { backgroundColor: '#007bff', justifyContent: 'center', paddingHorizontal: 15, borderRadius: 5, marginLeft: 10 },
+  buttonText: { color: '#fff', fontSize: 16, textAlign: 'center' },
+  productList: { paddingHorizontal: 5, paddingBottom: 60 },
+  productItem: { flex: 1, margin: 5, borderRadius: 5, borderWidth: 1, borderColor: '#CCCCCC', padding: 10, alignItems: 'center', backgroundColor: '#F9F9F9' },
+  imageContainer: { height: 120, width: '100%', borderRadius: 5, overflow: 'hidden', marginBottom: 8 },
+  swiper: { height: '100%' },
+  productImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  productName: { fontWeight: 'bold', textAlign: 'center' },
+  details: { fontSize: 16, marginTop: 5, marginBottom: 10 },
+  price: { fontSize: 16, fontWeight: 'bold' },
+  modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
+  modalContent: { backgroundColor: '#FFF', borderRadius: 10, padding: 20, width: '90%' },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  addressItem: { marginRight: 10 },
+  addressCard: { padding: 10, backgroundColor: '#f9f9f9', borderRadius: 5, flex: 1, marginRight: 10 },
+  addressesContainer: { paddingBottom: 20 },
+  newAddressInput: { flexDirection: 'row', marginTop: 10 },
+  newAddressTextInput: { flex: 1, height: 40, borderColor: 'gray', borderWidth: 1, paddingHorizontal: 10, borderRadius: 5 },
+  addButton: { backgroundColor: '#007bff', justifyContent: 'center', paddingHorizontal: 15, borderRadius: 5, marginLeft: 10 },
+  addButtonText: { color: '#fff', fontSize: 16, textAlign: 'center' },
+  closeButton: { marginTop: 20, fontSize: 16, color: '#007bff', textAlign: 'center' },
+  loaderTop: { marginBottom: 10 },
+  loaderBottom: { marginTop: 10 },
+  noProductsText: { fontSize: 16, textAlign: 'center', marginTop: 20 },
 });
 
 export default Home;
