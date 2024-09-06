@@ -1,10 +1,8 @@
-// CategoryMenu.js
-
 import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons'; // Assuming you have an icon library imported
+import Icon from 'react-native-vector-icons/Ionicons';
 
-const CategoryMenu = () => {
+const CategoryMenu = ({ onCategorySelect }) => {
   const categories = [
     { id: '1', name: 'Cars', icon: 'car' },
     { id: '2', name: 'Properties', icon: 'home' },
@@ -14,11 +12,10 @@ const CategoryMenu = () => {
     { id: '6', name: 'Furniture', icon: 'bed' },
     { id: '7', name: 'Fashion', icon: 'shirt' },
     { id: '8', name: 'Books', icon: 'book' },
-    // Add more categories with their respective icon names
   ];
 
   const renderCategory = ({ item }) => (
-    <TouchableOpacity style={styles.categoryItem}>
+    <TouchableOpacity style={styles.categoryItem} onPress={() => onCategorySelect(item.id)}>
       <Icon name={item.icon} size={24} color="#007bff" />
       <Text style={styles.categoryName}>{item.name}</Text>
     </TouchableOpacity>

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Image, TextInput, FlatList, ActivityIndicator } from 'react-native';
 import Swiper from 'react-native-swiper';
 import CategoryMenu from './CategoryMenu';
@@ -10,7 +10,7 @@ const Home = ({ navigation }) => {
   const [products, setProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true); // Track if more data is available
+  const [hasMore, setHasMore] = useState(true);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState('Kolkata');
   const [newAddress, setNewAddress] = useState('');
@@ -19,51 +19,74 @@ const Home = ({ navigation }) => {
     { id: '2', name: 'Kolkata- Sodepur' },
     { id: '3', name: 'Kolkata- Barrackpore' },
   ]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
-  const fetchProducts = async (page, reset = false) => {
+  // Function to fetch products
+  const fetchProducts = async (page, category, reset = false) => {
+    if (isLoading) return; // Avoid multiple requests while one is in progress
+
     setIsLoading(true);
-    const apiUrl = `${BASE_URL}/my-post?page=${page}`;
+    const apiUrl = `${BASE_URL}/posts?page=${page}${category ? `&category=${category}` : ''}`;
+    console.log(apiUrl);
     const requestOptions = {
-      method: "GET",
-      headers: { "Authorization": `Bearer ${TOKEN}` },
+      method: 'GET',
+      headers: { Authorization: `Bearer ${TOKEN}` },
     };
 
     try {
       const response = await fetch(apiUrl, requestOptions);
       const jsonResponse = await response.json();
-      if (reset) {
-        setProducts(jsonResponse.data);
+
+      // Check if jsonResponse.data exists and is an array
+      if (!jsonResponse.data || jsonResponse.data.length === 0) {
+        setProducts([]); // Clear product list if no data is returned
+        setHasMore(false); // Stop further fetching
+      } else if (reset) {
+        setProducts(jsonResponse.data); // Reset the product list
       } else {
-        setProducts(prevProducts => [...prevProducts, ...jsonResponse.data]);
+        setProducts((prevProducts) => [...prevProducts, ...jsonResponse.data]); // Append new data
       }
+
       setCurrentPage(page);
-      setHasMore(jsonResponse.data.length > 0); // Update hasMore based on response
+      setHasMore(jsonResponse.data && jsonResponse.data.length == 15);
     } catch (error) {
-      console.error("Failed to load products", error);
+      console.error('Failed to load products', error);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Ensure loading is reset after the API call completes
     }
   };
 
+  // Fetch products on category change
   useEffect(() => {
-    fetchProducts(currentPage);
-  }, []);
+    fetchProducts(1, selectedCategory, true); // Fetch products for the selected category
+  }, [selectedCategory]);
 
+  // Handle scrolling to the end of the list
   const handleScrollEndReached = () => {
     if (!isLoading && hasMore) {
-      fetchProducts(currentPage + 1);
+      fetchProducts(currentPage + 1, selectedCategory);
     }
   };
 
+  // Handle scrolling back to the top
   const handleScrollTopReached = () => {
     if (!isLoading && currentPage > 1) {
-      fetchProducts(1, true);
+      fetchProducts(1, selectedCategory, true);
       setCurrentPage(1);
     }
   };
 
+  // Handle category selection from the CategoryMenu
+  const handleCategorySelect = (categoryId) => {
+    setSelectedCategory(categoryId); // Update category ID when a category is selected
+  };
+
+  // Render each product item in the FlatList
   const renderProductItem = ({ item }) => (
-    <TouchableOpacity style={styles.productItem} onPress={() => navigation.navigate('ProductDetails', { product: item })}>
+    <TouchableOpacity
+      style={styles.productItem}
+      onPress={() => navigation.navigate('ProductDetails', { product: item })}
+    >
       <View style={styles.imageContainer}>
         <Swiper style={styles.swiper} showsPagination autoplay autoplayTimeout={3}>
           {item.images.map((imageUri, index) => (
@@ -72,7 +95,9 @@ const Home = ({ navigation }) => {
         </Swiper>
       </View>
       <Text style={styles.productName}>{item.post_details.title}</Text>
-      <Text style={styles.details} numberOfLines={2} ellipsizeMode="tail">{item.post_details.description}</Text>
+      <Text style={styles.details} numberOfLines={2} ellipsizeMode="tail">
+        {item.post_details.description}
+      </Text>
       <Text style={styles.price}>Price: ${item.post_details.amount}</Text>
     </TouchableOpacity>
   );
@@ -97,7 +122,8 @@ const Home = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <CategoryMenu />
+      {/* Pass handleCategorySelect to CategoryMenu */}
+      <CategoryMenu onCategorySelect={handleCategorySelect} />
 
       {isLoading && products.length === 0 && <ActivityIndicator size="large" color="#007bff" style={styles.loaderTop} />}
 
@@ -114,8 +140,13 @@ const Home = ({ navigation }) => {
             handleScrollTopReached();
           }
         }}
+        ListEmptyComponent={() => (
+          !isLoading && <Text style={styles.noProductsText}>No products found</Text>
+        )}
         ListFooterComponent={
-          products.length > 0 ? (isLoading && hasMore ? <ActivityIndicator size="large" color="#007bff" style={styles.loaderBottom} /> : null) : <Text style={styles.noProductsText}>No products found</Text>
+          products.length > 0 ? (
+            isLoading && hasMore ? <ActivityIndicator size="large" color="#007bff" style={styles.loaderBottom} /> : null
+          ) : null
         }
       />
 
@@ -129,10 +160,13 @@ const Home = ({ navigation }) => {
               data={addresses}
               renderItem={({ item }) => (
                 <View style={styles.addressItem}>
-                  <TouchableOpacity style={styles.addressCard} onPress={() => {
-                    setSelectedAddress(item.name);
-                    setShowAddressModal(false);
-                  }}>
+                  <TouchableOpacity
+                    style={styles.addressCard}
+                    onPress={() => {
+                      setSelectedAddress(item.name);
+                      setShowAddressModal(false);
+                    }}
+                  >
                     <Text>{item.name}</Text>
                   </TouchableOpacity>
                 </View>
@@ -148,12 +182,15 @@ const Home = ({ navigation }) => {
                 onChangeText={setNewAddress}
                 value={newAddress}
               />
-              <TouchableOpacity style={styles.addButton} onPress={() => {
-                if (newAddress.trim()) {
-                  setAddresses([...addresses, { id: String(addresses.length + 1), name: newAddress }]);
-                  setNewAddress('');
-                }
-              }}>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => {
+                  if (newAddress.trim()) {
+                    setAddresses([...addresses, { id: String(addresses.length + 1), name: newAddress }]);
+                    setNewAddress('');
+                  }
+                }}
+              >
                 <Text style={styles.addButtonText}>Add</Text>
               </TouchableOpacity>
             </View>
