@@ -16,6 +16,9 @@ import Settings from './Settings';
 import ImageViewer from './ImageViewer';
 import CompanyDetailsPage from './CompanyDetailsPage';
 import ProductForm from './ProductForm';
+import AddCarForm from './AddProduct/AddCarForm';
+import AddHousesApartments from './AddProduct/AddHousesApartments';
+import AddLandPlots from './AddProduct/AddLandPlots';
 
 const Stack = createStackNavigator();
 
@@ -26,9 +29,6 @@ const AppNavigator = () => {
       <Stack.Screen name="ProductDetails" component={ProductDetails} />
       <Stack.Screen name="ImageViewer" component={ImageViewer} />
       <Stack.Screen name="ChatBox" component={ChatBox} />
-      {/* <Stack.Screen name="ProductAddPage" component={ProductAddPage} /> */}
-      <Stack.Screen name="ProductAddPage" component={ProductAddPage} />
-      <Stack.Screen name="ProductFormPage" component={ProductForm} />
       <Stack.Screen name="ChatList" component={ChatList} />
       <Stack.Screen name="MyAdsPage" component={MyAdsPage} />
       <Stack.Screen name="Profile" component={Profile} />
@@ -39,6 +39,13 @@ const AppNavigator = () => {
       <Stack.Screen name="PackagePage" component={PackagePage} />
       <Stack.Screen name="Settings" component={Settings} />
       <Stack.Screen name="CompanyDetailsPage" component={CompanyDetailsPage} />
+
+      {/* Add product section */}
+      <Stack.Screen name="ProductAddPage" component={ProductAddPage} />
+      <Stack.Screen name="ProductForm" component={ProductForm} />
+      <Stack.Screen name="AddCarForm" component={AddCarForm} />
+      <Stack.Screen name="AddHousesApartments" component={AddHousesApartments} />
+      <Stack.Screen name="AddLandPlots" component={AddLandPlots} />
     </Stack.Navigator>
   );
 };

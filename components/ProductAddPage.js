@@ -20,7 +20,7 @@ const ProductAddPage = () => {
     const fetchCategories = async () => {
       const apiUrl = `${base_url}/category`;
       const myHeaders = new Headers();
-      myHeaders.append("Authorization", 'Bearer ' + token);
+      myHeaders.append("Authorization", `Bearer ${token}`);
 
       const requestOptions = {
         method: "GET",
@@ -29,7 +29,7 @@ const ProductAddPage = () => {
       };
 
       try {
-        const response = await fetch(apiUrl, requestOptions);  // Replace with your actual API endpoint
+        const response = await fetch(apiUrl, requestOptions);
         const data = await response.json();
         setCategories(data.categories);
       } catch (error) {
@@ -46,14 +46,40 @@ const ProductAddPage = () => {
     if (category.children.length > 0) {
       setSubcategories(category.children);
     } else {
-      // No subcategories, navigate directly to product form
-      navigation.navigate('ProductFormPage', { category, subcategory: null });
+      // Navigate based on the guard_name of the category
+      switch (category?.guard_name) {
+        case 'cars':
+          navigation.navigate('AddCarForm', { category });
+          break; // Ensure to break the case to avoid fall-through
+        default:
+          // Optionally handle other cases or provide feedback
+          console.log('No valid guard_name found for the selected category');
+          break;
+      }
     }
   };
 
   // Handle subcategory selection
   const handleSubcategorySelect = (subcategory) => {
-    navigation.navigate('ProductFormPage', { category: selectedCategory, subcategory });
+    console.log(subcategory.guard_name);
+    switch (subcategory?.guard_name) {
+      case 'houses_apartments':
+        navigation.navigate('AddHousesApartments', { category: selectedCategory, subcategory });
+        break; // Ensure to break the case to avoid fall-through
+      case 'land_plots':
+        navigation.navigate('AddLandPlots', { category: selectedCategory, subcategory });
+        break; // Ensure to break the case to avoid fall-through
+      case 'mens_fashion':
+        navigation.navigate('ProductForm', { category: selectedCategory, subcategory });
+        break; // Handle multiple cases in the same way
+      case 'womens_fashion':
+        navigation.navigate('ProductForm', { category: selectedCategory, subcategory });
+        break; // Handle multiple cases in the same way
+      default:
+        // Optionally handle other cases or provide feedback
+        console.log('No valid guard_name found for the selected subcategory');
+        break;
+    }
   };
 
   return (
