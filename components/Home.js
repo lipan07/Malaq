@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Image, TextInput, FlatList, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Image, TextInput, FlatList, ActivityIndicator, DeviceEventEmitter } from 'react-native';
 import Swiper from 'react-native-swiper';
 import CategoryMenu from './CategoryMenu';
 import BottomNavBar from './BottomNavBar';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useFocusEffect } from '@react-navigation/native';
 import { BASE_URL, TOKEN } from '@env';
 
 const Home = ({ navigation }) => {
@@ -57,9 +58,25 @@ const Home = ({ navigation }) => {
   };
 
   // Fetch products on category change
+  useFocusEffect(
+    useCallback(() => {
+      setSelectedCategory(null); // Update category ID when a category is selected
+      // When screen is focused, refresh the products
+      fetchProducts(1, null, true);
+    }, [])
+  );
+
   useEffect(() => {
-    fetchProducts(1, selectedCategory, true); // Fetch products for the selected category
-  }, [selectedCategory]);
+    const subscription = DeviceEventEmitter.addListener('refreshHome', () => {
+      setSelectedCategory(null);
+      fetchProducts(1, null, true);  // Refresh products when Home is pressed again
+    });
+
+    return () => {
+      // Clean up the event listener when the component unmounts
+      subscription.remove();
+    };
+  }, []);
 
   // Handle scrolling to the end of the list
   const handleScrollEndReached = () => {
@@ -79,6 +96,7 @@ const Home = ({ navigation }) => {
   // Handle category selection from the CategoryMenu
   const handleCategorySelect = (categoryId) => {
     setSelectedCategory(categoryId); // Update category ID when a category is selected
+    fetchProducts(1, categoryId, true);
   };
 
   // Render each product item in the FlatList
