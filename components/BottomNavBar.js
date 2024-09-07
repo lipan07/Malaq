@@ -1,13 +1,16 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, DeviceEventEmitter } from 'react-native';
 import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
 
 const BottomNavBar = () => {
   const navigation = useNavigation(); // Access navigation object
 
-  const handleNavigation = (val) => {
-    // Navigate to ProductDetailsPage and pass the productId as a parameter
-    navigation.navigate(val);
+  const handleNavigation = (screen) => {
+    if (screen === 'Home') {
+      // Emit the 'refreshHome' event using DeviceEventEmitter
+      DeviceEventEmitter.emit('refreshHome');
+    }
+    navigation.navigate(screen);
   };
 
   return (
